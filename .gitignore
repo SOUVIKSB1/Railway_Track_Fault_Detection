@@ -1,0 +1,29 @@
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Keras/TensorFlow model files
+*.h5
+*.keras
+
+# Python cache / bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Gradio cache/temp files
+.gradio/
+flagged/
+
+# Datasets & Large directories
+**/dataset/
+Railway Track fault Detection Updated/

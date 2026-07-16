@@ -1,0 +1,14 @@
+{
+  "confidence_threshold": 0.72,
+  "class_names": [
+    "Defective",
+    "Non_Defective"
+  ],
+  "image_size": [
+    224,
+    224
+  ],
+  "model_file": "railway_model.keras",
+  "architecture": "EfficientNetV2B0",
+  "best_val_accuracy": 0.8136
+}

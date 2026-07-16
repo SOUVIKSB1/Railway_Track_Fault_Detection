@@ -1,0 +1,10 @@
+EfficientNetV2B0 — Railway Track Fault Detection
+=======================================================
+               precision    recall  f1-score   support
+
+    Defective       1.00      0.62      0.77        29
+Non_Defective       0.73      1.00      0.85        30
+
+     accuracy                           0.81        59
+    macro avg       0.87      0.81      0.81        59
+ weighted avg       0.86      0.81      0.81        59
