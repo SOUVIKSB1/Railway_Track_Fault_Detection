@@ -1,5 +1,5 @@
 {
-  "confidence_threshold": 0.72,
+  "confidence_threshold": 0.5,
   "class_names": [
     "Defective",
     "Non_Defective"
@@ -8,7 +8,15 @@
     224,
     224
   ],
-  "model_file": "railway_model.keras",
-  "architecture": "EfficientNetV2B0",
-  "best_val_accuracy": 0.8136
+  "architecture": "EfficientNetV2B0_RAG_Hybrid",
+  "best_val_accuracy": 0.9733,
+  "total_samples": 375,
+  "metrics": {
+    "defective": {
+      "f1": 0.0
+    },
+    "non_defective": {
+      "f1": 0.97
+    }
+  }
 }

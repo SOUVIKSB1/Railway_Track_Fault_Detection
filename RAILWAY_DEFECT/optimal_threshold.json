@@ -1,0 +1,6 @@
+{
+  "threshold": 0.5,
+  "uncertain_band": 0.12,
+  "f1_defective": 0.0,
+  "overall_accuracy": 0.9733333333333334
+}

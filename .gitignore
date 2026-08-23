@@ -1,5 +1,6 @@
 # OS-specific files
 .DS_Store
+**/.DS_Store
 Thumbs.db
 
 # IDEs and editors
@@ -11,12 +12,18 @@ Thumbs.db
 *.sln
 *.sw?
 
-# Keras/TensorFlow model files
+# Keras/TensorFlow model files (binary checkpoints > 40MB)
 *.h5
 *.keras
 
+# Node / Frontend
+node_modules/
+**/node_modules/
+frontend/dist/
+
 # Python cache / bytecode
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
