@@ -1,5 +1,23 @@
 [
   {
+    "inspection_token": "RV-TRK-20260824-4622",
+    "timestamp": "2026-08-24 04:36:34",
+    "filename": "IMG_20201114_100021.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 86.8,
+    "latency_ms": 757
+  },
+  {
+    "inspection_token": "RV-TRK-20260824-4900",
+    "timestamp": "2026-08-24 04:36:14",
+    "filename": "Track_Transition_IMG_20201114_100130.jpg",
+    "status": "UNCERTAIN",
+    "severity_level": "UNCERTAIN",
+    "confidence": 54.48,
+    "latency_ms": 5903
+  },
+  {
     "inspection_token": "RV-TRK-20260824-3483",
     "timestamp": "2026-08-24 04:33:33",
     "filename": "IMG_20201114_100052.jpg",
