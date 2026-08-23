@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: railway-defect-detector
+    runtime: docker
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: 2
+      - key: TF_ENABLE_ONEDNN_OPTS
+        value: 0
+      - key: MPLBACKEND
+        value: Agg
