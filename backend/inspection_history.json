@@ -1,5 +1,23 @@
 [
   {
+    "inspection_token": "RV-TRK-20260824-7673",
+    "timestamp": "2026-08-24 04:25:27",
+    "filename": "Screenshot 2026-08-24 at 03.29.00.png",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 70.06,
+    "latency_ms": 578
+  },
+  {
+    "inspection_token": "RV-TRK-20260824-7043",
+    "timestamp": "2026-08-24 04:24:57",
+    "filename": "131004959_171473721383413_8222187747086021011_n.jpg",
+    "status": "DEFECTIVE",
+    "severity_level": "MODERATE_SEVERITY",
+    "confidence": 86.92,
+    "latency_ms": 5905
+  },
+  {
     "inspection_token": "RV-TRK-20260824-1933",
     "timestamp": "2026-08-24 04:22:51",
     "filename": "joint.jpg",

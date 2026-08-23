@@ -432,17 +432,17 @@ export default function ModelBenchmark() {
               <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3 font-mono text-xs">
                 <div className="text-slate-400 text-[11px]">1. Pixel-Wise Gradient Importance Weighting:</div>
                 <div className="p-2.5 bg-slate-900 rounded-lg text-emerald-400 text-center font-bold text-[11px] overflow-x-auto">
-                  α_ij^{k,c} = [ ∂²Y^c / (∂A_ij^k)² ] / [ 2 ∂²Y^c / (∂A_ij^k)² + ∑_ab A_ab^k (∂³Y^c / (∂A_ab^k)³) ]
+                  {"α_ij^(k,c) = [ ∂²Y^c / (∂A_ij^k)² ] / [ 2 ∂²Y^c / (∂A_ij^k)² + ∑_ab A_ab^k (∂³Y^c / (∂A_ab^k)³) ]"}
                 </div>
 
                 <div className="text-slate-400 text-[11px] pt-1">2. Non-Linear Feature Map Accumulation:</div>
                 <div className="p-2.5 bg-slate-900 rounded-lg text-blue-400 text-center font-bold text-[11px]">
-                  L_{Grad-CAM++}^c = ReLU( ∑_k [ ∑_ij α_ij^{k,c} • ReLU(∂Y^c / ∂A_ij^k) ] • A^k )
+                  {"L_GradCAM++^c = ReLU( ∑_k [ ∑_ij α_ij^(k,c) • ReLU(∂Y^c / ∂A_ij^k) ] • A^k )"}
                 </div>
 
                 <div className="text-slate-400 text-[11px] pt-1">3. Cubic Hermite Noise Suppression:</div>
                 <div className="p-2.5 bg-slate-900 rounded-lg text-amber-300 text-center font-bold text-[11px]">
-                  H_filtered = 3(H_norm)² - 2(H_norm)³  (for H &gt; 0.12)
+                  {"H_filtered = 3(H_norm)² - 2(H_norm)³  (for H_norm > 0.12)"}
                 </div>
               </div>
 
