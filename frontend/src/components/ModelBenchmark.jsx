@@ -302,59 +302,199 @@ export default function ModelBenchmark() {
         </div>
       )}
 
-      {/* Tab 3: Architecture & Grad-CAM */}
+      {/* Tab 3: Interactive Architecture & Grad-CAM++ */}
       {activeView === 'architecture' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-6 railway-glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-            <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-blue-400" />
-              EfficientNetV2-B0 Model Topology
-            </h3>
+        <div className="space-y-6">
+          {/* Top Overview Banner */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-xl bg-slate-900/80 border border-blue-500/30 space-y-1">
+              <div className="flex items-center gap-2 text-blue-400 font-mono text-xs">
+                <Cpu className="w-4 h-4" />
+                <span>Base Backbone</span>
+              </div>
+              <div className="text-lg font-bold text-white font-display">EfficientNetV2-B0</div>
+              <p className="text-[11px] text-slate-400">Fused-MBConv & Progressive Squeeze-Excitation blocks</p>
+            </div>
 
-            <div className="space-y-3 text-xs text-slate-300 font-mono">
-              <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
-                <span>Input Dimensions:</span>
-                <strong className="text-blue-400">224 × 224 × 3 RGB</strong>
+            <div className="p-4 rounded-xl bg-slate-900/80 border border-indigo-500/30 space-y-1">
+              <div className="flex items-center gap-2 text-indigo-400 font-mono text-xs">
+                <Zap className="w-4 h-4" />
+                <span>Vision RAG Manifold</span>
               </div>
-              <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
-                <span>Base Backbone:</span>
-                <strong className="text-white">Fused-MBConv & MBConv Blocks</strong>
+              <div className="text-lg font-bold text-white font-display">128-D L2 Embedding</div>
+              <p className="text-[11px] text-slate-400">k-NN nearest neighbor cosine retrieval across 375 reference vectors</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900/80 border border-emerald-500/30 space-y-1">
+              <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs">
+                <Layers className="w-4 h-4" />
+                <span>Explainability Engine</span>
               </div>
-              <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
-                <span>Grad-CAM Target Layer:</span>
-                <strong className="text-emerald-400">top_conv (7×7×1280)</strong>
-              </div>
-              <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
-                <span>Classification Head:</span>
-                <strong className="text-indigo-300">GAP → BN → Dense(128) → Softmax(2)</strong>
-              </div>
-              <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
-                <span>Inference Technique:</span>
-                <strong className="text-amber-300">Test-Time Augmentation (TTA)</strong>
-              </div>
+              <div className="text-lg font-bold text-white font-display">Grad-CAM++</div>
+              <p className="text-[11px] text-slate-400">Higher-order gradient localization on layer <code className="text-emerald-300">top_conv</code> (7×7×1280)</p>
             </div>
           </div>
 
-          <div className="lg:col-span-6 railway-glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-            <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
-              <Layers className="w-4 h-4 text-emerald-400" />
-              Grad-CAM Visual Attention Formulation
-            </h3>
+          {/* Interactive Network Pipeline Flow Diagram */}
+          <div className="railway-glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
+                <Layers className="w-4 h-4 text-blue-400" />
+                End-to-End Deep Learning & Vision RAG Architecture Pipeline
+              </h3>
+              <span className="text-[10px] font-mono text-slate-400">Tensor Flow Diagram</span>
+            </div>
 
-            <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3 font-mono text-xs">
-              <div className="text-slate-400 text-[11px]">1. Neuron Importance Weights:</div>
-              <div className="p-2.5 bg-slate-900 rounded-lg text-emerald-400 text-center font-bold">
-                α_k^c = (1 / Z) ∑_i ∑_j (∂y^c / ∂A_{i,j}^k)
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 pt-2">
+              {[
+                {
+                  step: '01',
+                  title: 'Input Tensor',
+                  shape: '224 × 224 × 3',
+                  desc: 'RGB Optical Frame',
+                  tag: 'Raw [0, 255]',
+                  color: 'border-blue-500/40 bg-blue-950/20 text-blue-300'
+                },
+                {
+                  step: '02',
+                  title: 'Stem & Fused-Conv',
+                  shape: '112 × 112 × 32',
+                  desc: 'Stages 1–3 Downsampling',
+                  tag: 'Conv2D + SiLU',
+                  color: 'border-cyan-500/40 bg-cyan-950/20 text-cyan-300'
+                },
+                {
+                  step: '03',
+                  title: 'MBConv & SE Blocks',
+                  shape: '7 × 7 × 1280',
+                  desc: 'Top Conv Layer',
+                  tag: 'Grad-CAM++ Target',
+                  color: 'border-emerald-500/40 bg-emerald-950/20 text-emerald-300'
+                },
+                {
+                  step: '04',
+                  title: 'Global Avg Pooling',
+                  shape: '1280-D Vector',
+                  desc: 'Spatial Aggregation',
+                  tag: 'GAP Layer',
+                  color: 'border-amber-500/40 bg-amber-950/20 text-amber-300'
+                },
+                {
+                  step: '05',
+                  title: 'RAG Embedding',
+                  shape: '128-D Projection',
+                  desc: 'L2-Normalized Embedding',
+                  tag: 'k-NN Retrieval',
+                  color: 'border-purple-500/40 bg-purple-950/20 text-purple-300'
+                },
+                {
+                  step: '06',
+                  title: 'Hybrid Softmax',
+                  shape: '2 Classes (P_def, P_hlth)',
+                  desc: '70% NN + 30% RAG',
+                  tag: 'Optimal Threshold 0.50',
+                  color: 'border-rose-500/40 bg-rose-950/20 text-rose-300'
+                }
+              ].map((node, idx) => (
+                <div key={idx} className={`p-4 rounded-xl border ${node.color} space-y-2 flex flex-col justify-between`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold opacity-60">STAGE {node.step}</span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-black/40 border border-white/10">{node.tag}</span>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-white font-display">{node.title}</h4>
+                    <div className="text-[11px] font-mono font-semibold text-white/90 mt-0.5">{node.shape}</div>
+                    <p className="text-[10px] text-slate-400 mt-1">{node.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 2 Column Technical Detail Breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left: Grad-CAM++ Mathematics & Formulation (6 cols) */}
+            <div className="lg:col-span-6 railway-glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-emerald-400" />
+                  Grad-CAM++ High-Precision Mathematical Formulation
+                </h3>
+                <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
+                  State-of-the-Art
+                </span>
               </div>
 
-              <div className="text-slate-400 text-[11px] pt-1">2. Class-Discriminative Localization Map:</div>
-              <div className="p-2.5 bg-slate-900 rounded-lg text-blue-400 text-center font-bold">
-                L_{Grad-CAM}^c = ReLU( ∑_k α_k^c A^k )
-              </div>
-
-              <p className="text-slate-400 text-[11px] pt-2 font-sans leading-relaxed">
-                The gradient of class score \(y^c\) with respect to feature activation map \(A^k\) is globally pooled to generate a coarse 2D thermal heatmap highlighting high-risk track fracture points.
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Standard Grad-CAM averages gradients uniformly, which blurs fine hairline cracks. <strong>Grad-CAM++</strong> introduces positive higher-order partial derivatives to provide pixel-sharp localization on multiple concurrent fracture sites:
               </p>
+
+              <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3 font-mono text-xs">
+                <div className="text-slate-400 text-[11px]">1. Pixel-Wise Gradient Importance Weighting:</div>
+                <div className="p-2.5 bg-slate-900 rounded-lg text-emerald-400 text-center font-bold text-[11px] overflow-x-auto">
+                  α_ij^{k,c} = [ ∂²Y^c / (∂A_ij^k)² ] / [ 2 ∂²Y^c / (∂A_ij^k)² + ∑_ab A_ab^k (∂³Y^c / (∂A_ab^k)³) ]
+                </div>
+
+                <div className="text-slate-400 text-[11px] pt-1">2. Non-Linear Feature Map Accumulation:</div>
+                <div className="p-2.5 bg-slate-900 rounded-lg text-blue-400 text-center font-bold text-[11px]">
+                  L_{Grad-CAM++}^c = ReLU( ∑_k [ ∑_ij α_ij^{k,c} • ReLU(∂Y^c / ∂A_ij^k) ] • A^k )
+                </div>
+
+                <div className="text-slate-400 text-[11px] pt-1">3. Cubic Hermite Noise Suppression:</div>
+                <div className="p-2.5 bg-slate-900 rounded-lg text-amber-300 text-center font-bold text-[11px]">
+                  H_filtered = 3(H_norm)² - 2(H_norm)³  (for H &gt; 0.12)
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-900/70 rounded-xl border border-slate-800 text-[11px] text-slate-300 flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  Suppresses non-informative background ballast texture while magnifying the thermal intensity on actual severed rail gaps and fissure edges.
+                </span>
+              </div>
+            </div>
+
+            {/* Right: Vision RAG Retrieval & Hybrid Fusion (6 cols) */}
+            <div className="lg:col-span-6 railway-glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-indigo-400" />
+                  Vision RAG (Retrieval-Augmented) Inference
+                </h3>
+                <span className="text-[10px] font-mono text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-800">
+                  Hybrid Fusion
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Rather than relying solely on parametric classification weights, RailVision AI implements <strong>Vision RAG</strong> to cross-examine incoming queries against a verified vector database of authentic railway track infrastructure:
+              </p>
+
+              <div className="space-y-2.5 text-xs">
+                <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
+                  <span className="text-slate-400">Reference Database:</span>
+                  <strong className="text-white font-mono">375 L2-Normalized Vectors (128-D)</strong>
+                </div>
+                <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
+                  <span className="text-slate-400">Nearest Neighbor Query:</span>
+                  <strong className="text-indigo-400 font-mono">Top-k (k=7) Cosine Similarity</strong>
+                </div>
+                <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
+                  <span className="text-slate-400">Ensemble Weighting:</span>
+                  <strong className="text-emerald-400 font-mono">70% Neural Network + 30% RAG Vote</strong>
+                </div>
+                <div className="p-3 bg-slate-900/80 rounded-xl border border-slate-800 flex justify-between items-center">
+                  <span className="text-slate-400">Domain Gate Threshold:</span>
+                  <strong className="text-amber-400 font-mono">Max Cosine Sim ≥ 0.35</strong>
+                </div>
+              </div>
+
+              <div className="p-3 bg-indigo-950/40 rounded-xl border border-indigo-800/60 text-[11px] text-indigo-200 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <span>
+                  Provides empirical certainty: if an image matches bolted expansion joint vectors, the RAG vote guarantees it will not be falsely flagged as a fracture.
+                </span>
+              </div>
             </div>
           </div>
         </div>

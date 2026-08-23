@@ -159,6 +159,15 @@ load_system()
 # GRAD-CAM HEATMAP UTILITIES
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def apply_turbo_colormap(gray_arr: np.ndarray) -> np.ndarray:
+    x = np.clip(gray_arr, 0.0, 1.0)
+    # High-contrast Turbo approximation
+    r = np.clip(0.1357 + x * (4.5974 + x * (-42.681 + x * (130.58 + x * (-154.49 + x * 59.95)))), 0.0, 1.0)
+    g = np.clip(0.0914 + x * (2.1856 + x * (4.8052 + x * (-14.019 + x * (4.2109 + x * 2.7747)))), 0.0, 1.0)
+    b = np.clip(0.1067 + x * (12.583 + x * (-76.886 + x * (218.67 + x * (-281.85 + x * 128.76)))), 0.0, 1.0)
+    rgb = np.stack([r, g, b], axis=-1) * 255.0
+    return rgb.astype(np.uint8)
+
 def apply_jet_colormap(gray_arr: np.ndarray) -> np.ndarray:
     val = np.clip(gray_arr, 0.0, 1.0)
     r = np.clip(1.5 - np.abs(4.0 * val - 3.0), 0.0, 1.0)
@@ -168,37 +177,64 @@ def apply_jet_colormap(gray_arr: np.ndarray) -> np.ndarray:
     return rgb.astype(np.uint8)
 
 def compute_gradcam(img_array: np.ndarray, pred_class_idx: int = 0) -> Optional[np.ndarray]:
+    """
+    State-of-the-Art Grad-CAM++ computation for high-precision railway crack localization.
+    Uses higher-order gradients to capture fine hairline fractures and multi-point joint defects.
+    """
     if grad_model is None:
         return None
     try:
-        with tf.GradientTape() as tape:
-            conv_outputs, predictions = grad_model(img_array)
-            loss = predictions[:, pred_class_idx]
+        with tf.GradientTape(persistent=True) as tape2:
+            with tf.GradientTape() as tape1:
+                conv_outputs, predictions = grad_model(img_array)
+                score = predictions[:, pred_class_idx]
+            grads_1 = tape1.gradient(score, conv_outputs)
+        grads_2 = tape2.gradient(grads_1, conv_outputs)
 
-        grads = tape.gradient(loss, conv_outputs)
-        if grads is None:
+        if grads_1 is None:
             return None
-        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-        conv_outputs = conv_outputs[0]
-        heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
-        heatmap = tf.squeeze(heatmap)
-        heatmap = tf.maximum(heatmap, 0)
+
+        conv = conv_outputs[0]
+        g1 = grads_1[0]
+        g2 = grads_2[0] if grads_2 is not None else tf.square(g1)
+        g3 = tf.pow(g1, 3)
+
+        # Grad-CAM++ Alpha Weights
+        denom = 2.0 * g2 + tf.reduce_sum(conv * g3, axis=(0, 1), keepdims=True)
+        denom = tf.where(denom != 0.0, denom, tf.ones_like(denom))
+        alphas = g2 / (denom + 1e-7)
+        alphas = tf.maximum(alphas, 0.0)
+
+        weights = tf.reduce_sum(alphas * tf.maximum(g1, 0.0), axis=(0, 1))
+        heatmap = tf.reduce_sum(conv * weights, axis=-1)
+        heatmap = tf.maximum(heatmap, 0.0)
+
         max_val = tf.math.reduce_max(heatmap)
         if max_val > 0:
             heatmap = heatmap / max_val
-        
+
         heatmap_np = heatmap.numpy()
-        heat_img = Image.fromarray((heatmap_np * 255).astype(np.uint8), mode="L")
+
+        # Non-linear cubic Hermite curve for background noise suppression (isolates true defects)
+        h_filtered = np.where(heatmap_np > 0.12, (heatmap_np - 0.12) / 0.88, 0.0)
+        h_filtered = 3 * (h_filtered**2) - 2 * (h_filtered**3)
+
+        heat_img = Image.fromarray((h_filtered * 255).astype(np.uint8), mode="L")
         heat_resized = heat_img.resize((IMAGE_SIZE[0], IMAGE_SIZE[1]), resample=Image.Resampling.BICUBIC)
         return np.array(heat_resized, dtype=np.float32) / 255.0
     except Exception as e:
-        print(f"GradCAM computation error: {e}")
+        print(f"GradCAM++ computation error: {e}")
         return None
 
-def create_overlay_image(orig_pil: Image.Image, heatmap_arr: np.ndarray, alpha: float = 0.55) -> Image.Image:
-    orig_resized = orig_pil.convert("RGB").resize(IMAGE_SIZE)
-    orig_np = np.array(orig_resized, dtype=np.float32)
-    colored_heat = apply_jet_colormap(heatmap_arr)
+def create_overlay_image(orig_pil: Image.Image, heatmap_arr: np.ndarray, alpha: float = 0.55, colormap: str = "turbo") -> Image.Image:
+    orig_w, orig_h = orig_pil.size
+    # Resize heatmap to match full resolution of the original user upload
+    heat_pil = Image.fromarray((heatmap_arr * 255).astype(np.uint8), mode="L")
+    heat_high_res = np.array(heat_pil.resize((orig_w, orig_h), resample=Image.Resampling.BICUBIC), dtype=np.float32) / 255.0
+
+    orig_np = np.array(orig_pil.convert("RGB"), dtype=np.float32)
+    colored_heat = apply_turbo_colormap(heat_high_res) if colormap == "turbo" else apply_jet_colormap(heat_high_res)
+    
     blended = (1.0 - alpha) * orig_np + alpha * colored_heat.astype(np.float32)
     blended = np.clip(blended, 0, 255).astype(np.uint8)
     return Image.fromarray(blended)
@@ -532,15 +568,21 @@ def process_single_image(
     is_uncertain = max_conf < 0.60
     is_defective = (pred_class == "Defective") and not is_uncertain
 
-    # 5. Grad-CAM Heatmap
+    # 5. Grad-CAM++ High-Precision Explainability Heatmap
     gradcam_base64 = None
+    gradcam_jet_base64 = None
     heatmap_intensity = 0.0
-    if grad_model is not None and not is_uncertain:
-        heatmap_arr = compute_gradcam(img_array, pred_class_idx=pred_idx)
-        if heatmap_arr is not None:
-            overlay_pil = create_overlay_image(pil_img, heatmap_arr, alpha=0.55)
-            gradcam_base64 = pil_to_base64(overlay_pil)
-            heatmap_intensity = float(np.mean(heatmap_arr))
+    if grad_model is not None:
+        try:
+            heatmap_arr = compute_gradcam(img_array, pred_class_idx=pred_idx)
+            if heatmap_arr is not None:
+                overlay_turbo = create_overlay_image(pil_img, heatmap_arr, alpha=0.55, colormap="turbo")
+                overlay_jet = create_overlay_image(pil_img, heatmap_arr, alpha=0.55, colormap="jet")
+                gradcam_base64 = pil_to_base64(overlay_turbo)
+                gradcam_jet_base64 = pil_to_base64(overlay_jet)
+                heatmap_intensity = float(np.mean(heatmap_arr))
+        except Exception as e:
+            print("GradCAM error:", e)
 
     orig_base64 = pil_to_base64(pil_img)
     safety = assess_track_safety(is_defective=is_defective, confidence=max_conf, is_uncertain=is_uncertain)
@@ -561,6 +603,7 @@ def process_single_image(
         "safety_assessment": safety,
         "original_image": orig_base64,
         "gradcam_image": gradcam_base64,
+        "gradcam_jet_image": gradcam_jet_base64,
         "heatmap_intensity": round(heatmap_intensity, 4),
         "inference_latency_ms": latency_ms
     }

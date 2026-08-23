@@ -29,7 +29,9 @@ export default function ImageInspector({ onInspectionComplete }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const [viewMode, setViewMode] = useState('split'); // 'split', 'overlay', 'original', 'gradcam'
+  const [viewMode, setViewMode] = useState('split'); // 'split', 'wipe', 'overlay', 'original', 'gradcam'
+  const [selectedColormap, setSelectedColormap] = useState('turbo'); // 'turbo', 'jet'
+  const [wipePos, setWipePos] = useState(50);
   const [samples, setSamples] = useState([]);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -628,95 +630,171 @@ export default function ImageInspector({ onInspectionComplete }) {
                     </div>
                   </div>
 
-                  {/* Explainable AI Visual Panel (Grad-CAM) */}
+                  {/* Explainable AI Visual Panel (Grad-CAM++) */}
                   <div className="railway-glass-card rounded-2xl p-5 border border-slate-800 space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
                           <Layers className="w-4 h-4 text-blue-400" />
-                          Grad-CAM Convolutional Attention Heatmap
+                          Grad-CAM++ Spatial Attention Localization
                         </h3>
                         <p className="text-xs text-slate-400">
-                          Layer <code className="text-blue-300 font-mono text-[11px]">top_conv</code> spatial feature activation localization
+                          Higher-order gradient activations on layer <code className="text-blue-300 font-mono text-[11px]">top_conv</code> (7×7×1280)
                         </p>
                       </div>
 
-                      {/* View Mode Switcher */}
-                      <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
-                        {['split', 'overlay', 'original', 'gradcam'].map((mode) => (
+                      {/* Colormap & Mode Controls */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Colormap Selector */}
+                        <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px]">
                           <button
-                            key={mode}
-                            onClick={() => setViewMode(mode)}
-                            className={`px-2.5 py-1 rounded-lg font-medium capitalize transition ${
-                              viewMode === mode
+                            onClick={() => setSelectedColormap('turbo')}
+                            className={`px-2 py-0.5 rounded-lg font-medium transition ${
+                              selectedColormap === 'turbo'
+                                ? 'bg-indigo-600 text-white font-semibold shadow'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            Turbo Spectrum
+                          </button>
+                          <button
+                            onClick={() => setSelectedColormap('jet')}
+                            className={`px-2 py-0.5 rounded-lg font-medium transition ${
+                              selectedColormap === 'jet'
                                 ? 'bg-blue-600 text-white font-semibold shadow'
                                 : 'text-slate-400 hover:text-slate-200'
                             }`}
                           >
-                            {mode}
+                            Thermal Jet
                           </button>
-                        ))}
+                        </div>
+
+                        {/* View Mode Switcher */}
+                        <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+                          {['split', 'wipe', 'overlay', 'original'].map((mode) => (
+                            <button
+                              key={mode}
+                              onClick={() => setViewMode(mode)}
+                              className={`px-2.5 py-1 rounded-lg font-medium capitalize transition ${
+                                viewMode === mode
+                                  ? 'bg-blue-600 text-white font-semibold shadow'
+                                  : 'text-slate-400 hover:text-slate-200'
+                              }`}
+                            >
+                              {mode}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
                     {/* Viewport */}
-                    <div className="relative rounded-xl overflow-hidden bg-black border border-slate-800">
-                      {viewMode === 'split' ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2">
-                          <div className="relative rounded-lg overflow-hidden bg-black aspect-square">
-                            <img
-                              src={result.original_image}
-                              alt="Input Track"
-                              className="w-full h-full object-cover"
-                            />
-                            <span className="absolute bottom-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] font-mono text-slate-300">
-                              Optical Input
-                            </span>
-                          </div>
+                    {(() => {
+                      const activeHeatmap = selectedColormap === 'jet' 
+                        ? (result.gradcam_jet_image || result.gradcam_image)
+                        : (result.gradcam_image || result.gradcam_jet_image);
 
-                          <div className="relative rounded-lg overflow-hidden bg-black aspect-square">
-                            {result.gradcam_image ? (
-                              <img
-                                src={result.gradcam_image}
-                                alt="Grad-CAM Heatmap"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
-                                Heatmap unavailable
+                      return (
+                        <div className="relative rounded-xl overflow-hidden bg-black border border-slate-800">
+                          {viewMode === 'split' ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2">
+                              <div className="relative rounded-lg overflow-hidden bg-black aspect-square">
+                                <img
+                                  src={result.original_image}
+                                  alt="Input Track"
+                                  className="w-full h-full object-cover"
+                                />
+                                <span className="absolute bottom-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] font-mono text-slate-300">
+                                  Optical Input
+                                </span>
                               </div>
-                            )}
-                            <span className="absolute bottom-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] font-mono text-blue-300">
-                              Grad-CAM Heatmap
-                            </span>
-                          </div>
+
+                              <div className="relative rounded-lg overflow-hidden bg-black aspect-square">
+                                {activeHeatmap ? (
+                                  <img
+                                    src={activeHeatmap}
+                                    alt="Grad-CAM Heatmap"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
+                                    Heatmap unavailable
+                                  </div>
+                                )}
+                                <span className="absolute bottom-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] font-mono text-blue-300">
+                                  Grad-CAM++ Attention ({selectedColormap.toUpperCase()})
+                                </span>
+                              </div>
+                            </div>
+                          ) : viewMode === 'wipe' ? (
+                            <div className="relative aspect-video max-h-[400px] flex items-center justify-center bg-black select-none overflow-hidden group">
+                              <img
+                                src={result.original_image}
+                                alt="Original Track"
+                                className="absolute inset-0 w-full h-full object-contain"
+                              />
+                              <div 
+                                className="absolute inset-0 overflow-hidden"
+                                style={{ width: `${wipePos}%` }}
+                              >
+                                <img
+                                  src={activeHeatmap || result.original_image}
+                                  alt="Grad-CAM Overlay"
+                                  className="absolute inset-0 w-full h-full object-contain max-w-none"
+                                  style={{ width: '100%' }}
+                                />
+                              </div>
+
+                              {/* Wipe Divider Line */}
+                              <div 
+                                className="absolute top-0 bottom-0 w-0.5 bg-blue-400 shadow-lg shadow-blue-500 cursor-ew-resize flex items-center justify-center"
+                                style={{ left: `${wipePos}%` }}
+                              >
+                                <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-mono shadow-md border border-white/40">
+                                  ↔
+                                </div>
+                              </div>
+
+                              {/* Wipe Slider Control */}
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={wipePos}
+                                onChange={(e) => setWipePos(Number(e.target.value))}
+                                className="absolute bottom-3 left-6 right-6 opacity-60 hover:opacity-100 transition cursor-ew-resize accent-blue-500"
+                              />
+
+                              <span className="absolute top-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] font-mono text-blue-300">
+                                Grad-CAM++ Wipe Comparison
+                              </span>
+                            </div>
+                          ) : viewMode === 'overlay' ? (
+                            <div className="relative aspect-video max-h-[380px] flex items-center justify-center bg-black">
+                              <img
+                                src={activeHeatmap || result.original_image}
+                                alt="Grad-CAM Overlay"
+                                className="h-full object-contain"
+                              />
+                              <span className="absolute bottom-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] font-mono text-emerald-300">
+                                Grad-CAM++ ({selectedColormap.toUpperCase()})
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="relative aspect-video max-h-[380px] flex items-center justify-center bg-black">
+                              <img
+                                src={result.original_image}
+                                alt="Input Track"
+                                className="h-full object-contain"
+                              />
+                              <span className="absolute bottom-2 left-2 bg-black/75 px-2 py-0.5 rounded text-[10px] font-mono text-slate-300">
+                                Optical Input
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      ) : viewMode === 'overlay' ? (
-                        <div className="relative aspect-video max-h-[380px] flex items-center justify-center bg-black">
-                          <img
-                            src={result.gradcam_image || result.original_image}
-                            alt="Grad-CAM Overlay"
-                            className="h-full object-contain"
-                          />
-                        </div>
-                      ) : viewMode === 'original' ? (
-                        <div className="relative aspect-video max-h-[380px] flex items-center justify-center bg-black">
-                          <img
-                            src={result.original_image}
-                            alt="Input Track"
-                            className="h-full object-contain"
-                          />
-                        </div>
-                      ) : (
-                        <div className="relative aspect-video max-h-[380px] flex items-center justify-center bg-black">
-                          <img
-                            src={result.gradcam_image || result.original_image}
-                            alt="Grad-CAM"
-                            className="h-full object-contain"
-                          />
-                        </div>
-                      )}
-                    </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Assessment & Action Card */}
