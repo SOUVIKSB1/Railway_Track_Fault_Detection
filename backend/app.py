@@ -431,9 +431,9 @@ def get_sample_images():
     non_def_dir = DATASET_DIR / "Non_Defective"
     mod_dir = DATASET_DIR / "Moderate"
 
-    # 1. Defective Track Samples (Broken rails, cracks, fractures)
+    # 1. Defective Track Samples (Broken rails, cracks, fractures) — exactly 3 samples
     if def_dir.exists():
-        for file in sorted(os.listdir(def_dir))[:6]:
+        for file in sorted(os.listdir(def_dir))[:3]:
             if file.lower().endswith(('.jpg', '.jpeg', '.png')):
                 samples.append({
                     "id": f"def_{file}",
@@ -445,9 +445,9 @@ def get_sample_images():
                     "url": f"/api/sample-image/Defective/{file}"
                 })
 
-    # 2. Moderate Samples (Mechanical expansion joints, bonded signal circuits, switches)
+    # 2. Moderate Samples (Mechanical expansion joints, bonded signal circuits) — exactly 3 samples
     if mod_dir.exists():
-        for file in sorted(os.listdir(mod_dir))[:6]:
+        for file in sorted(os.listdir(mod_dir))[:3]:
             if file.lower().endswith(('.jpg', '.jpeg', '.png')):
                 clean_title = file.replace('_', ' ').replace('.jpg', '').replace('.png', '')
                 samples.append({
@@ -460,9 +460,9 @@ def get_sample_images():
                     "url": f"/api/sample-image/Moderate/{file}"
                 })
 
-    # 3. Safe / Healthy Samples (Continuous welded rails, clear track)
+    # 3. Safe / Healthy Samples (Continuous welded rails, clear track) — exactly 3 samples
     if non_def_dir.exists():
-        for file in sorted(os.listdir(non_def_dir))[:6]:
+        for file in sorted(os.listdir(non_def_dir))[:3]:
             if file.lower().endswith(('.jpg', '.jpeg', '.png')):
                 samples.append({
                     "id": f"non_def_{file}",
