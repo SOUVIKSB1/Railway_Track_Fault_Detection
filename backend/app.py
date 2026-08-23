@@ -429,36 +429,64 @@ def get_sample_images():
     samples = []
     def_dir = DATASET_DIR / "Defective"
     non_def_dir = DATASET_DIR / "Non_Defective"
+    mod_dir = DATASET_DIR / "Moderate"
 
+    # 1. Defective Track Samples (Broken rails, cracks, fractures)
     if def_dir.exists():
-        for file in sorted(os.listdir(def_dir))[:8]:
+        for file in sorted(os.listdir(def_dir))[:6]:
             if file.lower().endswith(('.jpg', '.jpeg', '.png')):
                 samples.append({
                     "id": f"def_{file}",
                     "filename": file,
                     "category": "Defective",
-                    "title": f"Defect: {file[:18]}",
+                    "label": "Defective",
+                    "severity": "CRITICAL_DEFECT",
+                    "title": f"Defect: {file[:16]}",
                     "url": f"/api/sample-image/Defective/{file}"
                 })
 
+    # 2. Moderate Samples (Mechanical expansion joints, bonded signal circuits, switches)
+    if mod_dir.exists():
+        for file in sorted(os.listdir(mod_dir))[:6]:
+            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
+                clean_title = file.replace('_', ' ').replace('.jpg', '').replace('.png', '')
+                samples.append({
+                    "id": f"mod_{file}",
+                    "filename": file,
+                    "category": "Moderate",
+                    "label": "Moderate",
+                    "severity": "NOMINAL_JOINT",
+                    "title": clean_title[:22],
+                    "url": f"/api/sample-image/Moderate/{file}"
+                })
+
+    # 3. Safe / Healthy Samples (Continuous welded rails, clear track)
     if non_def_dir.exists():
-        for file in sorted(os.listdir(non_def_dir))[:8]:
+        for file in sorted(os.listdir(non_def_dir))[:6]:
             if file.lower().endswith(('.jpg', '.jpeg', '.png')):
                 samples.append({
                     "id": f"non_def_{file}",
                     "filename": file,
-                    "category": "Non_Defective",
-                    "title": f"Healthy: {file[:18]}",
-                    "url": f"/api/sample-image/Non_Defective/{file}"
+                    "category": "Safe",
+                    "label": "Safe",
+                    "severity": "HEALTHY",
+                    "title": f"Safe: {file[:16]}",
+                    "url": f"/api/sample-image/Safe/{file}"
                 })
 
     return {"samples": samples}
 
 @app.get("/api/sample-image/{category}/{filename}")
 def serve_sample_image(category: str, filename: str):
-    if category not in ["Defective", "Non_Defective"]:
+    allowed_dirs = {
+        "Defective": DATASET_DIR / "Defective",
+        "Non_Defective": DATASET_DIR / "Non_Defective",
+        "Safe": DATASET_DIR / "Non_Defective",
+        "Moderate": DATASET_DIR / "Moderate"
+    }
+    if category not in allowed_dirs:
         raise HTTPException(status_code=400, detail="Invalid category")
-    file_path = DATASET_DIR / category / filename
+    file_path = allowed_dirs[category] / filename
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Sample image not found")
     return FileResponse(file_path)

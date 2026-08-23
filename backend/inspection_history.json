@@ -1,5 +1,14 @@
 [
   {
+    "inspection_token": "RV-TRK-20260824-3483",
+    "timestamp": "2026-08-24 04:33:33",
+    "filename": "IMG_20201114_100052.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 88.84,
+    "latency_ms": 7049
+  },
+  {
     "inspection_token": "RV-TRK-20260824-7673",
     "timestamp": "2026-08-24 04:25:27",
     "filename": "Screenshot 2026-08-24 at 03.29.00.png",
