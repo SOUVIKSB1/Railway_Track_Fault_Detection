@@ -12,15 +12,22 @@ from typing import List, Optional
 from datetime import datetime
 from pathlib import Path
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MPLBACKEND"] = "Agg"
 os.environ["MPLCONFIGDIR"] = "/tmp/mpl"
 
 import numpy as np
 from PIL import Image
 import tensorflow as tf
-from tensorflow.keras.applications.efficientnet_v2 import preprocess_input as eff_preprocess
-from tensorflow.keras.applications.densenet import preprocess_input as dense_preprocess
+
+try:
+    tf.config.threading.set_inter_op_parallelism_threads(1)
+    tf.config.threading.set_intra_op_parallelism_threads(1)
+except Exception:
+    pass
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

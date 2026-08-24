@@ -26,9 +26,12 @@ COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 ENV PORT=8000
 ENV HOST=0.0.0.0
 ENV CUDA_VISIBLE_DEVICES="-1"
-ENV TF_CPP_MIN_LOG_LEVEL=2
+ENV TF_CPP_MIN_LOG_LEVEL=3
 ENV TF_ENABLE_ONEDNN_OPTS=0
+ENV OMP_NUM_THREADS=1
+ENV TF_NUM_INTRAOP_THREADS=1
+ENV TF_NUM_INTEROP_THREADS=1
 ENV MPLBACKEND=Agg
 ENV MPLCONFIGDIR=/tmp/mpl
 
-CMD ["sh", "-c", "python -m uvicorn backend.app:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "python -m uvicorn backend.app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --limit-concurrency 10"]
