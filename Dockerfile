@@ -25,7 +25,9 @@ COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
 ENV PORT=8000
 ENV HOST=0.0.0.0
+ENV CUDA_VISIBLE_DEVICES="-1"
 ENV TF_CPP_MIN_LOG_LEVEL=2
+ENV TF_ENABLE_ONEDNN_OPTS=0
 ENV MPLBACKEND=Agg
 ENV MPLCONFIGDIR=/tmp/mpl
 

@@ -1,5 +1,41 @@
 [
   {
+    "inspection_token": "RV-TRK-20260824-3080",
+    "timestamp": "2026-08-24 04:40:43",
+    "filename": "Defect_Track_Fracture.jpg",
+    "status": "DEFECTIVE",
+    "severity_level": "MODERATE_SEVERITY",
+    "confidence": 86.91,
+    "latency_ms": 432
+  },
+  {
+    "inspection_token": "RV-TRK-20260824-5074",
+    "timestamp": "2026-08-24 04:40:35",
+    "filename": "Safe_Signal_Bonded_Joint.png",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 69.33,
+    "latency_ms": 612
+  },
+  {
+    "inspection_token": "RV-TRK-20260824-9201",
+    "timestamp": "2026-08-24 04:40:29",
+    "filename": "Safe_Continuous_Welded_Track.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 89.56,
+    "latency_ms": 706
+  },
+  {
+    "inspection_token": "RV-TRK-20260824-8311",
+    "timestamp": "2026-08-24 04:40:08",
+    "filename": "Safe_Bolted_Fishplate_Joint.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 68.28,
+    "latency_ms": 5471
+  },
+  {
     "inspection_token": "RV-TRK-20260824-4622",
     "timestamp": "2026-08-24 04:36:34",
     "filename": "IMG_20201114_100021.jpg",

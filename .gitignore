@@ -14,12 +14,11 @@ Thumbs.db
 
 # Keras/TensorFlow model files (binary checkpoints > 40MB)
 *.h5
-*.keras
+phase1.keras
 
 # Node / Frontend
 node_modules/
 **/node_modules/
-frontend/dist/
 
 # Python cache / bytecode
 __pycache__/
@@ -31,6 +30,7 @@ __pycache__/
 .gradio/
 flagged/
 
-# Datasets & Large directories
-**/dataset/
+# Bulk raw training dataset (1.8 GB)
+**/dataset/Defective/
+**/dataset/Non_Defective/
 Railway Track fault Detection Updated/
