@@ -12,28 +12,23 @@ from typing import List, Optional
 from datetime import datetime
 from pathlib import Path
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 os.environ["MPLBACKEND"] = "Agg"
 os.environ["MPLCONFIGDIR"] = "/tmp/mpl"
 
 import numpy as np
 from PIL import Image
 import tensorflow as tf
-
-try:
-    tf.config.threading.set_inter_op_parallelism_threads(1)
-    tf.config.threading.set_intra_op_parallelism_threads(1)
-except Exception:
-    pass
+from tensorflow.keras.applications.efficientnet_v2 import preprocess_input as eff_preprocess
+from tensorflow.keras.applications.densenet import preprocess_input as dense_preprocess
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+from backend.vector_db import vector_db
 
 app = FastAPI(
     title="RailVision AI — Track Defect Diagnostic Engine",
@@ -431,6 +426,10 @@ def get_benchmark_graph(name: str):
         raise HTTPException(status_code=404, detail="Graph file not found")
     return FileResponse(file_path)
 
+@app.get("/api/vectordb/stats")
+def get_vectordb_stats():
+    return vector_db.get_stats()
+
 @app.get("/api/samples")
 def get_sample_images():
     samples = []
@@ -573,18 +572,17 @@ def process_single_image(
         p4 = model.predict(np.rot90(img_array, k=2, axes=(1, 2)), verbose=0)[0]
         p_nn = (p1 + p2 + p3 + p4) / 4.0
 
-        # RAG Retrieval vote
+        # RAG Vector DB Nearest Neighbor Retrieval
+        retrieved_neighbors = []
         p_rag_def = float(p_nn[0])
         p_rag_non = float(p_nn[1])
-        if rag_features is not None and rag_labels is not None and feature_vec is not None:
-            feat_norm = feature_vec / max(np.linalg.norm(feature_vec), 1e-7)
-            sims = np.dot(rag_features, feat_norm)
-            top_k_indices = np.argsort(sims)[-7:]
-            top_k_sims = sims[top_k_indices]
-            top_k_labels = rag_labels[top_k_indices]
-            weights = np.maximum(top_k_sims, 1e-5)
-            p_rag_def = float(np.sum(weights[top_k_labels == 0]) / np.sum(weights))
-            p_rag_non = 1.0 - p_rag_def
+        if feature_vec is not None and vector_db.is_loaded:
+            retrieved_neighbors = vector_db.query(feature_vec, top_k=7)
+            if retrieved_neighbors:
+                weights = np.array([max(n["score"], 1e-5) for n in retrieved_neighbors])
+                def_weights = np.sum([weights[i] for i, n in enumerate(retrieved_neighbors) if n["label"] == 0])
+                p_rag_def = float(def_weights / np.sum(weights))
+                p_rag_non = 1.0 - p_rag_def
 
         # 70% NN + 30% RAG Hybrid Fusion
         p_hybrid_def = 0.70 * float(p_nn[0]) + 0.30 * p_rag_def
@@ -600,6 +598,7 @@ def process_single_image(
         pred_class = "Non_Defective"
         pred_idx = 1
         conf_scores = {"Defective": 0.10, "Non_Defective": 0.90}
+        retrieved_neighbors = []
 
     latency_ms = int((time.time() - start_infer) * 1000)
     is_uncertain = max_conf < 0.60
@@ -638,6 +637,10 @@ def process_single_image(
         "confidence_threshold": CONFIDENCE_THRESHOLD,
         "confidence_scores": {k: round(v * 100, 2) for k, v in conf_scores.items()},
         "safety_assessment": safety,
+        "rag_retrieval": {
+            "top_k": len(retrieved_neighbors),
+            "neighbors": retrieved_neighbors[:5]
+        },
         "original_image": orig_base64,
         "gradcam_image": gradcam_base64,
         "gradcam_jet_image": gradcam_jet_base64,
