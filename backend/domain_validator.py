@@ -21,11 +21,26 @@ def get_rag_features() -> Optional[np.ndarray]:
             print(f"Error loading RAG features: {e}")
     return _rag_features
 
+def extract_embedding(pil_img: Image.Image) -> Optional[np.ndarray]:
+    try:
+        from backend.app import feature_model, IMAGE_SIZE
+        if feature_model is not None:
+            resized_pil = pil_img.resize(IMAGE_SIZE)
+            img_array = np.array(resized_pil, dtype=np.float32)
+            img_array = np.expand_dims(img_array, axis=0)
+            return feature_model.predict(img_array, verbose=0)[0]
+    except Exception as e:
+        pass
+    return None
+
 def validate_track_image(pil_img: Image.Image, feature_vector: Optional[np.ndarray] = None) -> Tuple[bool, Optional[str], Optional[str], float]:
     """
     Validates whether the image is a legitimate railway track photo.
     Returns: (is_valid, rejection_reason, detected_category, similarity_score)
     """
+    if feature_vector is None:
+        feature_vector = extract_embedding(pil_img)
+
     img_rgb = pil_img.convert("RGB")
     w, h = img_rgb.size
     
@@ -50,7 +65,7 @@ def validate_track_image(pil_img: Image.Image, feature_vector: Optional[np.ndarr
         if r_ratio > 0.85 or g_ratio > 0.85 or b_ratio > 0.85:
             return False, "Unnatural monochromatic or synthetic color profile detected. Please upload an authentic railway track photo.", "Monochromatic / Synthetic", 0.0
 
-    # 4. RAG Feature Database Cosine Similarity Verification
+    # 4. RAG Feature Database Cosine Similarity Verification (128-D Manifold)
     rag_feats = get_rag_features()
     similarity = 1.0
     if feature_vector is not None and rag_feats is not None:
@@ -60,7 +75,7 @@ def validate_track_image(pil_img: Image.Image, feature_vector: Optional[np.ndarr
         similarity = max_sim
         
         # Authentic railway tracks/joints have max similarity >= 0.40 (up to 0.95)
-        # Non-railway images (people, cars, animals, rooms, food) have max similarity <= 0.25
+        # Non-railway images (people, faces, cars, animals, rooms, food) have max similarity <= 0.28
         MIN_RAILWAY_SIMILARITY = 0.35
         
         if similarity < MIN_RAILWAY_SIMILARITY:
