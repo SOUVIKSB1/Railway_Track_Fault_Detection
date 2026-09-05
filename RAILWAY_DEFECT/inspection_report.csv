@@ -1,6 +1,0 @@
-Timestamp,Section ID,Inspector ID,Location,Weather Context,AI Status Verdict,AI Confidence
-2026-07-05 02:42:13,SEC-AUTO-N/A,INS-DEFAULT,LOC-GENERIC,Sunny / Clear,Defective,81.4%
-2026-07-05 02:41:52,SEC-AUTO-N/A,INS-DEFAULT,LOC-GENERIC,Sunny / Clear,Defective,93.7%
-2026-07-05 02:41:28,SEC-AUTO-N/A,INS-DEFAULT,LOC-GENERIC,Sunny / Clear,Defective,71.7%
-2026-07-05 02:41:04,SEC-AUTO-N/A,INS-DEFAULT,LOC-GENERIC,Sunny / Clear,Defective,99.3%
-2026-07-05 02:40:15,SEC-402-A,INS-8910,Kharagpur Jn (KM 114.8),Sunny / Clear,Non_Defective,90.8%

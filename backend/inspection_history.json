@@ -1,7 +1,34 @@
 [
   {
-    "inspection_token": "RV-TRK-20260905-6359",
-    "timestamp": "2026-09-05T16:39:36.359203+00:00",
+    "inspection_token": "RV-TRK-20260905-9667",
+    "timestamp": "2026-09-05T17:11:19.667524+00:00",
+    "filename": "track.jpg",
+    "status": "DEFECTIVE",
+    "severity_level": "LOW_SEVERITY",
+    "confidence": 77.58,
+    "latency_ms": 103
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-1558",
+    "timestamp": "2026-09-05T17:07:01.558171+00:00",
+    "filename": "Safe_Continuous_Welded_Track.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 85.94,
+    "latency_ms": 104
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-1364",
+    "timestamp": "2026-09-05T17:07:01.364111+00:00",
+    "filename": "Moderate_Turnout_Switch.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 79.64,
+    "latency_ms": 107
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-1229",
+    "timestamp": "2026-09-05T17:07:01.229343+00:00",
     "filename": "Defect_Track_Fracture.jpg",
     "status": "DEFECTIVE",
     "severity_level": "LOW_SEVERITY",
@@ -9,75 +36,39 @@
     "latency_ms": 100
   },
   {
-    "inspection_token": "RV-TRK-20260905-8562",
-    "timestamp": "2026-09-05 21:31:18",
-    "filename": "Defect_Broken_Rail_Severed.jpg",
-    "status": "DEFECTIVE",
-    "severity_level": "LOW_SEVERITY",
-    "confidence": 68.49,
-    "latency_ms": 122
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-7640",
-    "timestamp": "2026-09-05 21:31:17",
-    "filename": "Defect_Broken_Rail_Severed.jpg",
-    "status": "DEFECTIVE",
-    "severity_level": "LOW_SEVERITY",
-    "confidence": 68.49,
-    "latency_ms": 113
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-2032",
-    "timestamp": "2026-09-05 21:31:12",
-    "filename": "Moderate_Fastener_Assembly.jpg",
+    "inspection_token": "RV-TRK-20260905-2503",
+    "timestamp": "2026-09-05T17:06:42.503223+00:00",
+    "filename": "face_photo.jpg",
     "status": "HEALTHY",
     "severity_level": "NOMINAL",
-    "confidence": 77.75,
-    "latency_ms": 295
+    "confidence": 68.76,
+    "latency_ms": 92
   },
   {
-    "inspection_token": "RV-TRK-20260905-5574",
-    "timestamp": "2026-09-05 21:28:35",
+    "inspection_token": "RV-TRK-20260905-2316",
+    "timestamp": "2026-09-05T17:06:42.316422+00:00",
+    "filename": "Safe_Continuous_Welded_Track.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 85.94,
+    "latency_ms": 104
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-2124",
+    "timestamp": "2026-09-05T17:06:42.124432+00:00",
+    "filename": "Moderate_Turnout_Switch.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 79.64,
+    "latency_ms": 108
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-1990",
+    "timestamp": "2026-09-05T17:06:41.990278+00:00",
     "filename": "Defect_Track_Fracture.jpg",
     "status": "DEFECTIVE",
     "severity_level": "LOW_SEVERITY",
     "confidence": 77.58,
-    "latency_ms": 103
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-3925",
-    "timestamp": "2026-09-05 21:24:43",
-    "filename": "Defect_Track_Fracture.jpg",
-    "status": "DEFECTIVE",
-    "severity_level": "LOW_SEVERITY",
-    "confidence": 77.58,
-    "latency_ms": 103
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-9586",
-    "timestamp": "2026-09-05 21:24:29",
-    "filename": "Safe_Bolted_Fishplate_Joint.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 71.19,
-    "latency_ms": 127
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-6964",
-    "timestamp": "2026-09-05 21:24:26",
-    "filename": "Safe_Bolted_Fishplate_Joint.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 71.19,
-    "latency_ms": 106
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-5413",
-    "timestamp": "2026-09-05 21:24:25",
-    "filename": "Safe_Bolted_Fishplate_Joint.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 71.19,
-    "latency_ms": 122
+    "latency_ms": 97
   }
 ]
