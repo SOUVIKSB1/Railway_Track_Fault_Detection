@@ -564,7 +564,7 @@ export default function ImageInspector({ onInspectionComplete }) {
                 <div className="space-y-1">
                   <span className="text-[11px] font-mono text-slate-400 block">SEMANTIC TRACK SIMILARITY</span>
                   <div className="text-lg font-mono font-bold text-rose-400">
-                    {result.semantic_similarity}% <span className="text-xs text-slate-500 font-normal">(Required &ge; 32.0%)</span>
+                    {result.semantic_similarity}% <span className="text-xs text-slate-500 font-normal">(Required &ge; 58.0%)</span>
                   </div>
                 </div>
 

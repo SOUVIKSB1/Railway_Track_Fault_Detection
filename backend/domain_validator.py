@@ -72,18 +72,29 @@ def validate_track_image(pil_img: Image.Image, feature_vector: Optional[np.ndarr
         if max(r_ratio, g_ratio, b_ratio) > 0.88:
             return False, "Unnatural monochromatic or solid color profile detected. Please upload an authentic railway track photograph.", "Monochromatic / Synthetic", 0.0
 
-    # 4. Structural Edge Gradient & Linear Texture Analysis
-    gray = img_rgb.convert("L").resize((224, 224))
-    g_arr = np.array(gray, dtype=np.float32)
-    gx = np.zeros_like(g_arr)
-    gy = np.zeros_like(g_arr)
-    gx[:, 1:-1] = g_arr[:, 2:] - g_arr[:, :-2]
-    gy[1:-1, :] = g_arr[2:, :] - g_arr[:-2, :]
-    grad_mag = np.sqrt(gx**2 + gy**2)
-    mean_grad = float(np.mean(grad_mag))
-    strong_edges = float(np.mean(grad_mag > 28.0))
+    # 4. Indoor Painted Wall & Synthetic Color Profile Check
+    hsv = np.array(img_rgb.convert("HSV").resize((224, 224)), dtype=np.float32)
+    hue = hsv[:, :, 0] * 360.0 / 255.0
+    sat = hsv[:, :, 1] / 255.0
+    val = hsv[:, :, 2] / 255.0
 
-    # 5. Deep 128-D RAG Manifold Verification
+    # Indoor painted walls (Cyan/Teal/Aqua): Hue 150-205, Saturation > 0.22, Value > 0.35
+    cyan_wall = float(np.mean((hue >= 150) & (hue <= 205) & (sat > 0.22) & (val > 0.35)))
+    # Pink/Magenta/Purple walls: Hue 285-340, Saturation > 0.22, Value > 0.35
+    purple_wall = float(np.mean((hue >= 285) & (hue <= 340) & (sat > 0.22) & (val > 0.35)))
+
+    if cyan_wall > 0.25:
+        return False, f"Indoor painted wall / non-railway room detected ({cyan_wall*100:.1f}% indoor wall area). Please upload an authentic outdoor railway track photograph.", "Indoor Room / Wall", 0.0
+
+    if purple_wall > 0.25:
+        return False, f"Indoor non-railway color profile detected ({purple_wall*100:.1f}% synthetic wall area). Please upload an authentic railway track photograph.", "Indoor / Synthetic", 0.0
+
+    # 5. Smooth Region / Non-Ballast Surface Check
+    gray = np.array(img_rgb.convert("L").resize((224, 224)), dtype=np.float32)
+    lap = np.abs(gray[1:-1, 1:-1] * 4 - gray[:-2, 1:-1] - gray[2:, 1:-1] - gray[1:-1, :-2] - gray[1:-1, 2:])
+    smooth_ratio = float(np.mean(lap < 3.0))
+
+    # 6. Deep 128-D RAG Manifold Multi-Neighbor Ensemble Verification
     if feature_vector is None:
         feature_vector = extract_embedding(pil_img)
 
@@ -92,19 +103,29 @@ def validate_track_image(pil_img: Image.Image, feature_vector: Optional[np.ndarr
     if feature_vector is not None and rag_feats is not None:
         feat_norm = feature_vector / max(np.linalg.norm(feature_vector), 1e-7)
         sims = np.dot(rag_feats, feat_norm)
-        max_sim = float(np.max(sims))
-        similarity = max_sim
-        
-        # Calibrated Railway Domain Boundary:
-        # Non-railway images (human selfies, indoor rooms, vehicles, animals, nature, synthetic): <= 0.56
-        # Authentic railway track infrastructure: >= 0.58 (up to 0.98)
-        MIN_RAILWAY_SIMILARITY = 0.58
-        if similarity < MIN_RAILWAY_SIMILARITY:
-            match_pct = max(0.0, similarity * 100)
+        top1 = float(np.max(sims))
+        top5 = float(np.mean(np.sort(sims)[-5:]))
+        top10 = float(np.mean(np.sort(sims)[-10:]))
+        ensemble_sim = 0.35 * top1 + 0.40 * top5 + 0.25 * top10
+        similarity = ensemble_sim
+
+        # Absolute lower boundary for authentic railway infrastructure
+        if ensemble_sim < 0.45:
+            match_pct = max(0.0, ensemble_sim * 100)
             return (
                 False,
-                f"Non-Railway Image Detected (Track Match: {match_pct:.1f}% vs required 58.0%). The uploaded image does not match railway track infrastructure, rail heads, fasteners, or ballast geometry.",
+                f"Non-Railway Image Detected (Track Match: {match_pct:.1f}% vs required 48.0%). The uploaded image does not match railway track infrastructure, rail heads, fasteners, or ballast geometry.",
                 "Non-Railway Object / Irrelevant Image",
+                similarity
+            )
+
+        # Smooth surface filter: rejects human portraits, furniture, indoor scenes with large flat areas
+        if ensemble_sim < 0.65 and smooth_ratio > 0.32:
+            match_pct = max(0.0, ensemble_sim * 100)
+            return (
+                False,
+                f"Non-Railway Object Detected (Large smooth surface / portrait area: {smooth_ratio*100:.1f}%, match: {match_pct:.1f}%). Please upload a clear photo of railway tracks.",
+                "Non-Railway / Portrait Object",
                 similarity
             )
 

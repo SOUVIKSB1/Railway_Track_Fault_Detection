@@ -1,5 +1,41 @@
 [
   {
+    "inspection_token": "RV-TRK-20260905-9973",
+    "timestamp": "2026-09-05T18:16:09.973317+00:00",
+    "filename": "Safe_Continuous_Welded_Track.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 85.94,
+    "latency_ms": 116
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-9802",
+    "timestamp": "2026-09-05T18:16:09.802868+00:00",
+    "filename": "Moderate_Turnout_Switch.jpg",
+    "status": "DEFECTIVE",
+    "severity_level": "MODERATE_SEVERITY",
+    "confidence": 70.77,
+    "latency_ms": 110
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-9374",
+    "timestamp": "2026-09-05T18:16:09.374306+00:00",
+    "filename": "Defect_Track_Fracture.jpg",
+    "status": "DEFECTIVE",
+    "severity_level": "HIGH_SEVERITY",
+    "confidence": 79.69,
+    "latency_ms": 138
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-3065",
+    "timestamp": "2026-09-05T18:09:23.065810+00:00",
+    "filename": "camera_capture.jpg",
+    "status": "UNCERTAIN",
+    "severity_level": "UNCERTAIN",
+    "confidence": 59.58,
+    "latency_ms": 103
+  },
+  {
     "inspection_token": "RV-TRK-20260905-9401",
     "timestamp": "2026-09-05T18:01:09.401805+00:00",
     "filename": "Safe_Continuous_Welded_Track.jpg",
@@ -861,42 +897,6 @@
     "status": "HEALTHY",
     "severity_level": "NOMINAL",
     "confidence": 84.88,
-    "latency_ms": 118
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-1693",
-    "timestamp": "2026-09-05T17:57:31.693067+00:00",
-    "filename": "IMG_20201114_102455.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 77.81,
-    "latency_ms": 117
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-1217",
-    "timestamp": "2026-09-05T17:57:31.217047+00:00",
-    "filename": "IMG_20201114_102441.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 77.39,
-    "latency_ms": 117
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-0737",
-    "timestamp": "2026-09-05T17:57:30.737838+00:00",
-    "filename": "IMG_20201114_100849.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 71.23,
-    "latency_ms": 118
-  },
-  {
-    "inspection_token": "RV-TRK-20260905-0260",
-    "timestamp": "2026-09-05T17:57:30.260458+00:00",
-    "filename": "IMG_20201114_100134.jpg",
-    "status": "UNCERTAIN",
-    "severity_level": "UNCERTAIN",
-    "confidence": 52.6,
     "latency_ms": 118
   }
 ]
