@@ -18,7 +18,7 @@ os.environ["MPLBACKEND"] = "Agg"
 os.environ["MPLCONFIGDIR"] = "/tmp/mpl"
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -295,6 +295,17 @@ def save_to_history(record: dict):
 # API ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
+@app.get("/api/health")
+def health_check():
+    return {
+        "status": "healthy",
+        "engine": "LiteRT_EfficientNetV2B0",
+        "model_loaded": interpreter is not None,
+        "vector_db_loaded": vector_db.is_loaded if hasattr(vector_db, 'is_loaded') else True,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "uptime_seconds": int(time.time() - START_TIME)
+    }
+
 @app.get("/api/status")
 def get_system_status():
     return {
@@ -447,6 +458,7 @@ def process_single_image(
     try:
         Image.MAX_IMAGE_PIXELS = 50_000_000
         pil_img = Image.open(io.BytesIO(image_bytes))
+        pil_img = ImageOps.exif_transpose(pil_img)
         # Prevent server memory crash on giant 4K/8K images by downscaling safely
         if max(pil_img.size) > 1600:
             pil_img.thumbnail((1600, 1600), Image.Resampling.LANCZOS)
@@ -599,7 +611,8 @@ def process_batch_image_fast(image_bytes: bytes, filename: str, idx: int) -> dic
     token_id = f"RV-BAT-{now_utc.strftime('%Y%m%d')}-{idx+1:03d}"
 
     try:
-        pil_img = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize(IMAGE_SIZE)
+        raw_pil = Image.open(io.BytesIO(image_bytes))
+        pil_img = ImageOps.exif_transpose(raw_pil).convert("RGB").resize(IMAGE_SIZE)
         img_arr = np.array(pil_img, dtype=np.float32)[np.newaxis, ...]
         preds, emb, _ = run_tflite_inference(img_arr)
         p_raw = preds[0]
