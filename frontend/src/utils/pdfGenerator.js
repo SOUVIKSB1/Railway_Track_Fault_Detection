@@ -1,5 +1,22 @@
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import autoTable, { applyPlugin } from 'jspdf-autotable';
+
+// Ensure autoTable plugin is registered on jsPDF constructor
+try {
+  if (typeof applyPlugin === 'function') {
+    applyPlugin(jsPDF);
+  } else if (autoTable && typeof autoTable.applyPlugin === 'function') {
+    autoTable.applyPlugin(jsPDF);
+  }
+} catch (err) {
+  console.warn('jspdf-autotable registration note:', err);
+}
+
+// Coordinate & dimension sanitizer to prevent Invalid argument passed to jsPDF.f3
+const num = (val, fallback = 0) => {
+  const n = Number(val);
+  return Number.isFinite(n) ? n : fallback;
+};
 
 /**
  * Generate and download an Executive Technical Track Inspection & Diagnostic Report
@@ -48,21 +65,21 @@ export function generateInspectionPDF(inspection) {
     // Right Token Badge
     doc.setFillColor(20, 28, 48);
     doc.roundedRect(138, 5, 57, 18, 2, 2, 'F');
-    doc.setTextColor(110, 231, 183); // Emerald 300
+    doc.setTextColor(110, 231, 183);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
     doc.text('AUDIT TOKEN', 142, 10);
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(8.5);
-    doc.text(inspection.inspection_token || 'RV-TRK-2026', 142, 15);
+    doc.text(String(inspection.inspection_token || 'RV-TRK-2026'), 142, 15);
     doc.setFontSize(6.5);
     doc.setTextColor(148, 163, 184);
     const formattedDate = inspection.timestamp ? new Date(inspection.timestamp).toLocaleString() : new Date().toLocaleString();
-    doc.text(formattedDate.slice(0, 24), 142, 20);
+    doc.text(String(formattedDate).slice(0, 24), 142, 20);
 
     // 2. Status Banner
-    const isDefective = inspection.is_defective;
-    const isUncertain = inspection.is_uncertain;
+    const isDefective = Boolean(inspection.is_defective);
+    const isUncertain = Boolean(inspection.is_uncertain);
     const safety = inspection.safety_assessment || {};
 
     let statusBg = passGreen;
@@ -75,7 +92,7 @@ export function generateInspectionPDF(inspection) {
       statusSeverity = 'UNCERTAIN';
     } else if (isDefective) {
       statusBg = alertRed;
-      statusSeverity = safety.severity_level || 'CRITICAL_DEFECT';
+      statusSeverity = String(safety.severity_level || 'CRITICAL_DEFECT');
       statusText = `STRUCTURAL DEFECT DETECTED — ${statusSeverity.replace(/_/g, ' ')}`;
     }
 
@@ -88,14 +105,14 @@ export function generateInspectionPDF(inspection) {
 
     // 3. Inspection Parameters Table
     const tableData = [
-      ['Inspection Token', inspection.inspection_token || 'N/A', 'Audit Timestamp', formattedDate],
-      ['Input File', inspection.filename || 'track_sample.jpg', 'Image Tensor Size', '224 x 224 x 3 (Standardized)'],
+      ['Inspection Token', String(inspection.inspection_token || 'N/A'), 'Audit Timestamp', String(formattedDate)],
+      ['Input File', String(inspection.filename || 'track_sample.jpg'), 'Image Tensor Size', '224 x 224 x 3 (Standardized)'],
       ['Model Architecture', 'EfficientNetV2-B0 (LiteRT)', 'Validation Accuracy', '94.74% (Fine-Tuned Transfer Model)'],
       ['Diagnostic Class', isDefective ? 'DEFECTIVE' : (isUncertain ? 'UNCERTAIN' : 'HEALTHY / NOMINAL'), 'Prediction Confidence', `${inspection.confidence || 0}%`],
-      ['Calibrated Threshold', `${(inspection.confidence_threshold || 0.50) * 100}%`, 'Inference Latency', `${inspection.inference_latency_ms || 45} ms`],
+      ['Calibrated Threshold', `${(num(inspection.confidence_threshold, 0.50)) * 100}%`, 'Inference Latency', `${num(inspection.inference_latency_ms, 45)} ms`],
     ];
 
-    autoTable(doc, {
+    const tableOptions = {
       startY: 46,
       body: tableData,
       theme: 'grid',
@@ -113,13 +130,19 @@ export function generateInspectionPDF(inspection) {
         3: { cellWidth: 52 },
       },
       margin: { left: 15, right: 15 }
-    });
+    };
 
-    let currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 70) + 5;
+    if (typeof doc.autoTable === 'function') {
+      doc.autoTable(tableOptions);
+    } else if (typeof autoTable === 'function') {
+      autoTable(doc, tableOptions);
+    }
+
+    let currentY = num(doc.lastAutoTable && doc.lastAutoTable.finalY, 78) + 5;
 
     // 4. Embedded Side-by-Side Visual Evidence (Original & Grad-CAM)
-    const hasOriginal = inspection.original_image && typeof inspection.original_image === 'string' && inspection.original_image.startsWith('data:image/');
-    const hasGradcam = inspection.gradcam_image && typeof inspection.gradcam_image === 'string' && inspection.gradcam_image.startsWith('data:image/');
+    const hasOriginal = typeof inspection.original_image === 'string' && inspection.original_image.startsWith('data:image/');
+    const hasGradcam = typeof inspection.gradcam_image === 'string' && inspection.gradcam_image.startsWith('data:image/');
 
     if (hasOriginal) {
       doc.setFontSize(8.5);
@@ -134,19 +157,19 @@ export function generateInspectionPDF(inspection) {
       // Left: Original Image
       try {
         doc.setFillColor(241, 245, 249);
-        doc.roundedRect(15, imgY, imgWidth, imgHeight, 1.5, 1.5, 'F');
+        doc.roundedRect(15, num(imgY), num(imgWidth), num(imgHeight), 1.5, 1.5, 'F');
         const origFormat = inspection.original_image.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-        doc.addImage(inspection.original_image, origFormat, 15, imgY, imgWidth, imgHeight, undefined, 'FAST');
+        doc.addImage(inspection.original_image, origFormat, 15, num(imgY), num(imgWidth), num(imgHeight), undefined, 'FAST');
         doc.setDrawColor(...borderGray);
-        doc.roundedRect(15, imgY, imgWidth, imgHeight, 1.5, 1.5, 'D');
+        doc.roundedRect(15, num(imgY), num(imgWidth), num(imgHeight), 1.5, 1.5, 'D');
 
         // Caption Box
         doc.setFillColor(...primaryDark);
-        doc.roundedRect(16, imgY + imgHeight - 6, 42, 5, 1, 1, 'F');
+        doc.roundedRect(16, num(imgY + imgHeight - 6), 42, 5, 1, 1, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(6.5);
         doc.setFont('helvetica', 'bold');
-        doc.text('Input Track Photograph', 18, imgY + imgHeight - 2.5);
+        doc.text('Input Track Photograph', 18, num(imgY + imgHeight - 2.5));
       } catch (e) {
         console.warn('PDF original image embedding warning:', e);
       }
@@ -157,24 +180,24 @@ export function generateInspectionPDF(inspection) {
           const gradcamSrc = hasGradcam ? inspection.gradcam_image : inspection.original_image;
           const heatFormat = gradcamSrc.startsWith('data:image/png') ? 'PNG' : 'JPEG';
           doc.setFillColor(241, 245, 249);
-          doc.roundedRect(109, imgY, imgWidth, imgHeight, 1.5, 1.5, 'F');
-          doc.addImage(gradcamSrc, heatFormat, 109, imgY, imgWidth, imgHeight, undefined, 'FAST');
+          doc.roundedRect(109, num(imgY), num(imgWidth), num(imgHeight), 1.5, 1.5, 'F');
+          doc.addImage(gradcamSrc, heatFormat, 109, num(imgY), num(imgWidth), num(imgHeight), undefined, 'FAST');
           doc.setDrawColor(...borderGray);
-          doc.roundedRect(109, imgY, imgWidth, imgHeight, 1.5, 1.5, 'D');
+          doc.roundedRect(109, num(imgY), num(imgWidth), num(imgHeight), 1.5, 1.5, 'D');
 
           // Caption Box
           doc.setFillColor(...primaryDark);
-          doc.roundedRect(110, imgY + imgHeight - 6, 50, 5, 1, 1, 'F');
+          doc.roundedRect(110, num(imgY + imgHeight - 6), 50, 5, 1, 1, 'F');
           doc.setTextColor(110, 231, 183);
           doc.setFontSize(6.5);
           doc.setFont('helvetica', 'bold');
-          doc.text('Grad-CAM Defect Localization', 112, imgY + imgHeight - 2.5);
+          doc.text('Grad-CAM Defect Localization', 112, num(imgY + imgHeight - 2.5));
         } catch (e) {
           console.warn('PDF gradcam image embedding warning:', e);
         }
       }
 
-      currentY = imgY + imgHeight + 6;
+      currentY = num(imgY + imgHeight + 6);
     }
 
     // 5. Scientific Assessment & Engineering Recommendation Box
@@ -183,59 +206,61 @@ export function generateInspectionPDF(inspection) {
     doc.setTextColor(...primaryDark);
     doc.text('SCIENTIFIC DEFECT ASSESSMENT & ENGINEERING ACTION PLAN', 15, currentY);
 
-    const assessText = safety.scientific_assessment || 'Convolutional feature activations confirm normal rail surface profile and intact structural continuity.';
-    const recText = safety.engineering_recommendation || 'Track segment is structurally sound. Continue standard scheduled monitoring cycle.';
+    const assessText = String(safety.scientific_assessment || 'Convolutional feature activations confirm normal rail surface profile and intact structural continuity.');
+    const recText = String(safety.engineering_recommendation || 'Track segment is structurally sound. Continue standard scheduled monitoring cycle.');
 
-    const splitAssess = doc.splitTextToSize(`Diagnostic Finding: ${assessText}`, 172);
-    const splitRec = doc.splitTextToSize(`Required Action: ${recText}`, 172);
+    const splitAssess = doc.splitTextToSize(`Diagnostic Finding: ${assessText}`, 172) || [];
+    const splitRec = doc.splitTextToSize(`Required Action: ${recText}`, 172) || [];
 
-    const boxHeight = 12 + splitAssess.length * 3.8 + splitRec.length * 3.8;
+    const assessLines = Array.isArray(splitAssess) ? splitAssess.length : 1;
+    const recLines = Array.isArray(splitRec) ? splitRec.length : 1;
+    const boxHeight = num(12 + assessLines * 3.8 + recLines * 3.8, 24);
 
     doc.setFillColor(...cardBg);
     doc.setDrawColor(...borderGray);
-    doc.roundedRect(15, currentY + 2, 180, boxHeight, 2, 2, 'FD');
+    doc.roundedRect(15, num(currentY + 2), 180, num(boxHeight), 2, 2, 'FD');
 
     // Render Finding
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryDark);
-    doc.text('Diagnostic Finding:', 19, currentY + 7);
+    doc.text('Diagnostic Finding:', 19, num(currentY + 7));
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(51, 65, 85);
-    doc.text(doc.splitTextToSize(assessText, 142), 48, currentY + 7);
+    doc.text(doc.splitTextToSize(assessText, 142), 48, num(currentY + 7));
 
-    const recStartY = currentY + 8 + splitAssess.length * 3.8;
+    const recStartY = num(currentY + 8 + assessLines * 3.8);
 
     // Render Action
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(isDefective ? alertRed : primaryDark);
-    doc.text('Required Action:', 19, recStartY);
+    doc.text('Required Action:', 19, num(recStartY));
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(51, 65, 85);
-    doc.text(doc.splitTextToSize(recText, 142), 48, recStartY);
+    doc.text(doc.splitTextToSize(recText, 142), 48, num(recStartY));
 
-    currentY = currentY + 2 + boxHeight + 6;
+    currentY = num(currentY + 2 + boxHeight + 6);
 
     // 6. Sign-Off & Digital Verification Block
     doc.setFillColor(...cardBg);
     doc.setDrawColor(...borderGray);
-    doc.roundedRect(15, currentY, 180, 22, 2, 2, 'FD');
+    doc.roundedRect(15, num(currentY), 180, 22, 2, 2, 'FD');
 
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryDark);
-    doc.text('Certified Inspection Officer', 20, currentY + 6);
-    doc.text('Permanent Way (P-Way) Safety Cell', 115, currentY + 6);
+    doc.text('Certified Inspection Officer', 20, num(currentY + 6));
+    doc.text('Permanent Way (P-Way) Safety Cell', 115, num(currentY + 6));
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.8);
     doc.setTextColor(100, 116, 139);
-    doc.text('Digitally Authenticated AI Telemetry Sign-off', 20, currentY + 11);
-    doc.text(`Digital Verification Token: ${inspection.inspection_token || 'RV-TRK-2026'}`, 115, currentY + 11);
+    doc.text('Digitally Authenticated AI Telemetry Sign-off', 20, num(currentY + 11));
+    doc.text(`Digital Verification Token: ${String(inspection.inspection_token || 'RV-TRK-2026')}`, 115, num(currentY + 11));
 
     doc.setFontSize(6.5);
-    doc.text('Status: COMPLIANT WITH IRCTC SAFETY STANDARD', 20, currentY + 16);
-    doc.text('Audit Engine: RailVision AI LiteRT Multi-Output Model', 115, currentY + 16);
+    doc.text('Status: COMPLIANT WITH IRCTC SAFETY STANDARD', 20, num(currentY + 16));
+    doc.text('Audit Engine: RailVision AI LiteRT Multi-Output Model', 115, num(currentY + 16));
 
     // 7. Footer
     doc.setFillColor(...primaryDark);
