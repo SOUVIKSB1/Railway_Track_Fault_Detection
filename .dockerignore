@@ -1,0 +1,37 @@
+# Git and Environment
+.git
+.gitignore
+.DS_Store
+**/.DS_Store
+Thumbs.db
+.env
+*.env
+.vscode/
+.idea/
+
+# Node / Frontend build artifacts
+frontend/node_modules/
+**/node_modules/
+
+# Python cache and virtualenvs
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Bulk raw training & testing datasets (1.8+ GB)
+RAILWAY_DEFECT/railway_fault_detector/dataset/Defective/
+RAILWAY_DEFECT/railway_fault_detector/dataset/Non_Defective/
+RAILWAY_DEFECT/railway_fault_detector/dataset/Moderate/
+Railway Track fault Detection Updated/
+
+# Heavy training checkpoints / temporary files
+*.keras
+*.h5
+*.pdf
+.gradio/
+flagged/

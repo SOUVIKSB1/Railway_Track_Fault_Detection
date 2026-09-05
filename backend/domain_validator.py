@@ -23,13 +23,14 @@ def get_rag_features() -> Optional[np.ndarray]:
 
 def extract_embedding(pil_img: Image.Image) -> Optional[np.ndarray]:
     try:
-        from backend.app import feature_model, IMAGE_SIZE
-        if feature_model is not None:
-            resized_pil = pil_img.resize(IMAGE_SIZE)
-            img_array = np.array(resized_pil, dtype=np.float32)
-            img_array = np.expand_dims(img_array, axis=0)
-            return feature_model.predict(img_array, verbose=0)[0]
-    except Exception as e:
+        from backend.app import run_tflite_inference, IMAGE_SIZE
+        resized_pil = pil_img.resize(IMAGE_SIZE)
+        img_array = np.array(resized_pil, dtype=np.float32)
+        img_array = np.expand_dims(img_array, axis=0)
+        _, emb, _ = run_tflite_inference(img_array)
+        if emb is not None and len(emb) > 0:
+            return emb[0]
+    except Exception:
         pass
     return None
 

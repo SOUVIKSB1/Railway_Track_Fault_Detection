@@ -1,254 +1,74 @@
 [
   {
-    "inspection_token": "RV-TRK-20260824-3080",
-    "timestamp": "2026-08-24 04:40:43",
+    "inspection_token": "RV-TRK-20260905-8562",
+    "timestamp": "2026-09-05 21:31:18",
+    "filename": "Defect_Broken_Rail_Severed.jpg",
+    "status": "DEFECTIVE",
+    "severity_level": "LOW_SEVERITY",
+    "confidence": 68.49,
+    "latency_ms": 122
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-7640",
+    "timestamp": "2026-09-05 21:31:17",
+    "filename": "Defect_Broken_Rail_Severed.jpg",
+    "status": "DEFECTIVE",
+    "severity_level": "LOW_SEVERITY",
+    "confidence": 68.49,
+    "latency_ms": 113
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-2032",
+    "timestamp": "2026-09-05 21:31:12",
+    "filename": "Moderate_Fastener_Assembly.jpg",
+    "status": "HEALTHY",
+    "severity_level": "NOMINAL",
+    "confidence": 77.75,
+    "latency_ms": 295
+  },
+  {
+    "inspection_token": "RV-TRK-20260905-5574",
+    "timestamp": "2026-09-05 21:28:35",
     "filename": "Defect_Track_Fracture.jpg",
     "status": "DEFECTIVE",
-    "severity_level": "MODERATE_SEVERITY",
-    "confidence": 86.91,
-    "latency_ms": 432
+    "severity_level": "LOW_SEVERITY",
+    "confidence": 77.58,
+    "latency_ms": 103
   },
   {
-    "inspection_token": "RV-TRK-20260824-5074",
-    "timestamp": "2026-08-24 04:40:35",
-    "filename": "Safe_Signal_Bonded_Joint.png",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 69.33,
-    "latency_ms": 612
+    "inspection_token": "RV-TRK-20260905-3925",
+    "timestamp": "2026-09-05 21:24:43",
+    "filename": "Defect_Track_Fracture.jpg",
+    "status": "DEFECTIVE",
+    "severity_level": "LOW_SEVERITY",
+    "confidence": 77.58,
+    "latency_ms": 103
   },
   {
-    "inspection_token": "RV-TRK-20260824-9201",
-    "timestamp": "2026-08-24 04:40:29",
-    "filename": "Safe_Continuous_Welded_Track.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 89.56,
-    "latency_ms": 706
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-8311",
-    "timestamp": "2026-08-24 04:40:08",
+    "inspection_token": "RV-TRK-20260905-9586",
+    "timestamp": "2026-09-05 21:24:29",
     "filename": "Safe_Bolted_Fishplate_Joint.jpg",
     "status": "HEALTHY",
     "severity_level": "NOMINAL",
-    "confidence": 68.28,
-    "latency_ms": 5471
+    "confidence": 71.19,
+    "latency_ms": 127
   },
   {
-    "inspection_token": "RV-TRK-20260824-4622",
-    "timestamp": "2026-08-24 04:36:34",
-    "filename": "IMG_20201114_100021.jpg",
+    "inspection_token": "RV-TRK-20260905-6964",
+    "timestamp": "2026-09-05 21:24:26",
+    "filename": "Safe_Bolted_Fishplate_Joint.jpg",
     "status": "HEALTHY",
     "severity_level": "NOMINAL",
-    "confidence": 86.8,
-    "latency_ms": 757
+    "confidence": 71.19,
+    "latency_ms": 106
   },
   {
-    "inspection_token": "RV-TRK-20260824-4900",
-    "timestamp": "2026-08-24 04:36:14",
-    "filename": "Track_Transition_IMG_20201114_100130.jpg",
-    "status": "UNCERTAIN",
-    "severity_level": "UNCERTAIN",
-    "confidence": 54.48,
-    "latency_ms": 5903
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-3483",
-    "timestamp": "2026-08-24 04:33:33",
-    "filename": "IMG_20201114_100052.jpg",
+    "inspection_token": "RV-TRK-20260905-5413",
+    "timestamp": "2026-09-05 21:24:25",
+    "filename": "Safe_Bolted_Fishplate_Joint.jpg",
     "status": "HEALTHY",
     "severity_level": "NOMINAL",
-    "confidence": 88.84,
-    "latency_ms": 7049
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-7673",
-    "timestamp": "2026-08-24 04:25:27",
-    "filename": "Screenshot 2026-08-24 at 03.29.00.png",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 70.06,
-    "latency_ms": 578
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-7043",
-    "timestamp": "2026-08-24 04:24:57",
-    "filename": "131004959_171473721383413_8222187747086021011_n.jpg",
-    "status": "DEFECTIVE",
-    "severity_level": "MODERATE_SEVERITY",
-    "confidence": 86.92,
-    "latency_ms": 5905
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-1933",
-    "timestamp": "2026-08-24 04:22:51",
-    "filename": "joint.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 68.28,
-    "latency_ms": 547
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-1276",
-    "timestamp": "2026-08-24 04:22:31",
-    "filename": "broken.jpg",
-    "status": "DEFECTIVE",
-    "severity_level": "MODERATE_SEVERITY",
-    "confidence": 80.63,
-    "latency_ms": 10467
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-8777",
-    "timestamp": "2026-08-24 04:11:58",
-    "filename": "Screenshot 2026-08-20 at 17.02.40.png",
-    "status": "DEFECTIVE",
-    "severity_level": "LOW_SEVERITY",
-    "confidence": 74.18,
-    "latency_ms": 515
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-0246",
-    "timestamp": "2026-08-24 04:11:50",
-    "filename": "Screenshot 2026-08-24 at 03.09.51.png",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 67.04,
-    "latency_ms": 516
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-5731",
-    "timestamp": "2026-08-24 04:11:15",
-    "filename": "Screenshot 2026-08-24 at 03.29.00.png",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 70.06,
-    "latency_ms": 6391
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-9869",
-    "timestamp": "2026-08-24 04:01:19",
-    "filename": "broken.jpg",
-    "status": "DEFECTIVE",
-    "severity_level": "MODERATE_SEVERITY",
-    "confidence": 80.63,
-    "latency_ms": 410
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-8940",
-    "timestamp": "2026-08-24 04:01:18",
-    "filename": "bonded_joint.png",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 69.33,
-    "latency_ms": 442
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-0774",
-    "timestamp": "2026-08-24 04:01:00",
-    "filename": "bolted_joint.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 68.28,
-    "latency_ms": 9566
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-3082",
-    "timestamp": "2026-08-24 03:29:13",
-    "filename": "Screenshot 2026-08-24 at 03.29.00.png",
-    "status": "DEFECTIVE",
-    "severity_level": "MODERATE_SEVERITY",
-    "confidence": 82.93,
-    "latency_ms": 593
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-9629",
-    "timestamp": "2026-08-24 03:26:59",
-    "filename": "Screenshot 2026-08-24 at 03.26.53.png",
-    "status": "DEFECTIVE",
-    "severity_level": "HIGH_SEVERITY",
-    "confidence": 96.8,
-    "latency_ms": 338
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-1024",
-    "timestamp": "2026-08-24 03:26:21",
-    "filename": "Screenshot 2026-08-24 at 03.26.10.png",
-    "status": "DEFECTIVE",
-    "severity_level": "LOW_SEVERITY",
-    "confidence": 79.62,
-    "latency_ms": 591
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-6413",
-    "timestamp": "2026-08-24 03:25:46",
-    "filename": "Screenshot 2026-08-20 at 17.02.40.png",
-    "status": "DEFECTIVE",
-    "severity_level": "MODERATE_SEVERITY",
-    "confidence": 87.88,
-    "latency_ms": 315
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-1059",
-    "timestamp": "2026-08-24 03:25:11",
-    "filename": "Screenshot 2026-08-24 at 03.09.51.png",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 94.1,
-    "latency_ms": 5381
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-3109",
-    "timestamp": "2026-08-24 03:23:33",
-    "filename": "broken.jpg",
-    "status": "DEFECTIVE",
-    "severity_level": "LOW_SEVERITY",
-    "confidence": 73.28,
-    "latency_ms": 303
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-6496",
-    "timestamp": "2026-08-24 03:23:16",
-    "filename": "bolted_joint.jpg",
-    "status": "HEALTHY",
-    "severity_level": "NOMINAL",
-    "confidence": 94.1,
-    "latency_ms": 8607
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-7043",
-    "timestamp": "2026-08-24 03:10:07",
-    "filename": "Screenshot 2026-08-24 at 03.09.51.png",
-    "status": "DEFECTIVE",
-    "severity_level": "LOW_SEVERITY",
-    "confidence": 76.46,
-    "latency_ms": 560
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-4537",
-    "timestamp": "2026-08-24 03:09:04",
-    "filename": "131004959_171473721383413_8222187747086021011_n.jpg",
-    "status": "DEFECTIVE",
-    "severity_level": "MODERATE_SEVERITY",
-    "confidence": 83.1,
-    "latency_ms": 430
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-1542",
-    "timestamp": "2026-08-24 03:06:11",
-    "filename": "Screenshot 2026-08-20 at 17.02.40.png",
-    "status": "DEFECTIVE",
-    "severity_level": "LOW_SEVERITY",
-    "confidence": 72.7,
-    "latency_ms": 2653
-  },
-  {
-    "inspection_token": "RV-TRK-20260824-9755",
-    "timestamp": "2026-08-24 03:04:29",
-    "filename": "track.jpg",
-    "status": "UNCERTAIN",
-    "severity_level": "UNCERTAIN",
-    "confidence": 60.04,
-    "latency_ms": 2482
+    "confidence": 71.19,
+    "latency_ms": 122
   }
 ]

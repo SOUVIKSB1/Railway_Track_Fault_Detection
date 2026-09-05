@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for IRCTC RailTech AI
+# Multi-stage Dockerfile for RailVision AI
 # Stage 1: Build React Frontend
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
@@ -7,31 +7,26 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# Stage 2: Python Backend & Static Server
+# Stage 2: Ultra-Lightweight Python Backend & Static Server
 FROM python:3.12-slim
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Set environment flags for minimal memory and fast execution
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
+ENV HOST=0.0.0.0
+ENV MPLBACKEND=Agg
+ENV MPLCONFIGDIR=/tmp/mpl
 
+# Install lightweight Python dependencies (< 40MB total)
 COPY backend/requirements.txt backend/
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
+# Copy application files (raw datasets excluded via .dockerignore)
 COPY backend/ backend/
 COPY RAILWAY_DEFECT/ RAILWAY_DEFECT/
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
-ENV PORT=8000
-ENV HOST=0.0.0.0
-ENV CUDA_VISIBLE_DEVICES="-1"
-ENV TF_CPP_MIN_LOG_LEVEL=3
-ENV TF_ENABLE_ONEDNN_OPTS=0
-ENV OMP_NUM_THREADS=1
-ENV TF_NUM_INTRAOP_THREADS=1
-ENV TF_NUM_INTEROP_THREADS=1
-ENV MPLBACKEND=Agg
-ENV MPLCONFIGDIR=/tmp/mpl
+EXPOSE 8000
 
-CMD ["sh", "-c", "python -m uvicorn backend.app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --limit-concurrency 10"]
+CMD ["sh", "-c", "python -m uvicorn backend.app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

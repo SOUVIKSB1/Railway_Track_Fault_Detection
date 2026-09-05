@@ -7,9 +7,7 @@ services:
     envVars:
       - key: PORT
         value: 8000
-      - key: TF_CPP_MIN_LOG_LEVEL
-        value: 2
-      - key: TF_ENABLE_ONEDNN_OPTS
-        value: 0
+      - key: PYTHONUNBUFFERED
+        value: "1"
       - key: MPLBACKEND
         value: Agg
