@@ -1,7 +1,7 @@
 """
 RailVision AI — Railway Track Defect Diagnostic System
 Lightweight High-Performance Engine powered by FastAPI & LiteRT / TFLite + Explainable AI (CAM)
-Optimized for low memory (< 60MB RAM) and zero storage bloat.
+Optimized for low memory (< 60MB RAM), fast batch inference, and accurate audit timestamps.
 """
 
 import os
@@ -10,7 +10,7 @@ import json
 import time
 import base64
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -45,7 +45,7 @@ except ImportError:
 app = FastAPI(
     title="RailVision AI — Track Defect Diagnostic Engine",
     description="Lightweight Computer Vision & AI Diagnostic System for Rail Infrastructure Health Monitoring",
-    version="2.1.0"
+    version="2.2.0"
 )
 
 app.add_middleware(
@@ -369,53 +369,39 @@ def get_vectordb_stats():
 
 @app.get("/api/samples")
 def get_sample_images():
-    samples = []
-    def_dir = DATASET_DIR / "Defective_Curated"
-    safe_dir = DATASET_DIR / "Safe"
-    mod_dir = DATASET_DIR / "Moderate_Curated"
-
-    if def_dir.exists():
-        for file in sorted(os.listdir(def_dir)):
-            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
-                clean_title = file.replace('Defect_', '').replace('_', ' ').replace('.jpg', '').replace('.png', '')
-                samples.append({
-                    "id": f"def_{file}",
-                    "filename": file,
-                    "category": "Defective",
-                    "label": "Defective",
-                    "severity": "CRITICAL_DEFECT",
-                    "title": clean_title,
-                    "url": f"/api/sample-image/Defective/{file}"
-                })
-
-    if mod_dir.exists():
-        for file in sorted(os.listdir(mod_dir)):
-            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
-                clean_title = file.replace('Moderate_', '').replace('_', ' ').replace('.jpg', '').replace('.png', '')
-                samples.append({
-                    "id": f"mod_{file}",
-                    "filename": file,
-                    "category": "Moderate",
-                    "label": "Moderate",
-                    "severity": "NOMINAL_JOINT",
-                    "title": clean_title,
-                    "url": f"/api/sample-image/Moderate/{file}"
-                })
-
-    if safe_dir.exists():
-        for file in sorted(os.listdir(safe_dir)):
-            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
-                clean_title = file.replace('Safe_', '').replace('_', ' ').replace('.jpg', '').replace('.png', '')
-                samples.append({
-                    "id": f"safe_{file}",
-                    "filename": file,
-                    "category": "Safe",
-                    "label": "Safe",
-                    "severity": "HEALTHY",
-                    "title": clean_title,
-                    "url": f"/api/sample-image/Safe/{file}"
-                })
-
+    """Returns exactly 3 distinct representative samples (1 Defective, 1 Moderate Joint, 1 Healthy Safe)."""
+    samples = [
+        {
+            "id": "sample_defective",
+            "filename": "Defect_Track_Fracture.jpg",
+            "category": "Defective",
+            "label": "Defective",
+            "severity": "CRITICAL_DEFECT",
+            "title": "Severe Rail Track Fracture",
+            "subtitle": "Clear structural severance across rail head",
+            "url": "/api/sample-image/Defective/Defect_Track_Fracture.jpg"
+        },
+        {
+            "id": "sample_moderate",
+            "filename": "Moderate_Turnout_Switch.jpg",
+            "category": "Moderate",
+            "label": "Moderate",
+            "severity": "NOMINAL_JOINT",
+            "title": "Switch & Turnout Joint",
+            "subtitle": "Complex crossover track geometry",
+            "url": "/api/sample-image/Moderate/Moderate_Turnout_Switch.jpg"
+        },
+        {
+            "id": "sample_safe",
+            "filename": "Safe_Continuous_Welded_Track.jpg",
+            "category": "Safe",
+            "label": "Safe",
+            "severity": "HEALTHY",
+            "title": "Continuous Welded Safe Track",
+            "subtitle": "Nominal continuous rail with intact fasteners",
+            "url": "/api/sample-image/Safe/Safe_Continuous_Welded_Track.jpg"
+        }
+    ]
     return {"samples": samples}
 
 @app.get("/api/sample-image/{category}/{filename}")
@@ -454,8 +440,9 @@ def process_single_image(
     filename: str = "track_sample.jpg",
     sample_id: Optional[str] = None
 ) -> dict:
-    token_id = sample_id or f"RV-TRK-{datetime.now().strftime('%Y%m%d')}-{int(time.time()*1000)%10000:04d}"
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now_utc = datetime.now(timezone.utc)
+    token_id = sample_id or f"RV-TRK-{now_utc.strftime('%Y%m%d')}-{int(time.time()*1000)%10000:04d}"
+    iso_timestamp = now_utc.isoformat()
 
     try:
         pil_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
@@ -480,7 +467,7 @@ def process_single_image(
         latency_ms = int((time.time() - start_infer) * 1000)
         return {
             "inspection_token": token_id,
-            "timestamp": timestamp,
+            "timestamp": iso_timestamp,
             "filename": filename,
             "prediction_class": "Non-Railway Image",
             "is_defective": False,
@@ -561,7 +548,7 @@ def process_single_image(
 
     result = {
         "inspection_token": token_id,
-        "timestamp": timestamp,
+        "timestamp": iso_timestamp,
         "filename": filename,
         "prediction_class": "Uncertain" if is_uncertain else pred_class,
         "is_defective": is_defective,
@@ -586,7 +573,7 @@ def process_single_image(
 
     save_to_history({
         "inspection_token": token_id,
-        "timestamp": timestamp,
+        "timestamp": iso_timestamp,
         "filename": filename,
         "status": safety["status"],
         "severity_level": safety["severity_level"],
@@ -595,6 +582,75 @@ def process_single_image(
     })
 
     return result
+
+def process_batch_image_fast(image_bytes: bytes, filename: str, idx: int) -> dict:
+    """
+    Ultra-Fast single-pass inference designed specifically for high-speed bulk evaluation (< 10ms per image).
+    Skips redundant 4-way TTA and expensive base64 encoding.
+    """
+    t0 = time.perf_counter()
+    now_utc = datetime.now(timezone.utc)
+    token_id = f"RV-BAT-{now_utc.strftime('%Y%m%d')}-{idx+1:03d}"
+
+    try:
+        pil_img = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize(IMAGE_SIZE)
+        img_arr = np.array(pil_img, dtype=np.float32)[np.newaxis, ...]
+        preds, emb, _ = run_tflite_inference(img_arr)
+        p_raw = preds[0]
+        
+        # Fast RAG top-1 check if loaded
+        p_def = float(p_raw[0])
+        p_non = float(p_raw[1])
+        if emb is not None and vector_db.is_loaded and len(emb) > 0:
+            top_neighbors = vector_db.query(emb[0], top_k=3)
+            if top_neighbors:
+                weights = np.array([max(n["score"], 1e-5) for n in top_neighbors])
+                def_weights = np.sum([weights[i] for i, n in enumerate(top_neighbors) if n["label"] == 0])
+                p_rag_def = float(def_weights / np.sum(weights))
+                p_def = 0.75 * p_def + 0.25 * p_rag_def
+                p_non = 1.0 - p_def
+
+        probs = np.array([p_def, p_non])
+        max_conf = float(np.max(probs))
+        pred_idx = int(np.argmax(probs))
+        pred_class = CLASS_NAMES[pred_idx]
+        
+        is_uncertain = max_conf < 0.60
+        is_defective = (pred_class == "Defective") and not is_uncertain
+        safety = assess_track_safety(is_defective=is_defective, confidence=max_conf, is_uncertain=is_uncertain)
+        latency_ms = round((time.perf_counter() - t0) * 1000, 1)
+
+        return {
+            "inspection_token": token_id,
+            "timestamp": now_utc.isoformat(),
+            "filename": filename,
+            "prediction_class": "Uncertain" if is_uncertain else pred_class,
+            "is_defective": is_defective,
+            "is_uncertain": is_uncertain,
+            "confidence": round(max_conf * 100, 1),
+            "safety_assessment": safety,
+            "inference_latency_ms": latency_ms
+        }
+    except Exception as e:
+        return {
+            "inspection_token": token_id,
+            "timestamp": now_utc.isoformat(),
+            "filename": filename,
+            "prediction_class": "Error",
+            "is_defective": False,
+            "is_uncertain": True,
+            "confidence": 0.0,
+            "safety_assessment": {
+                "status": "ERROR",
+                "badge": "Processing Error",
+                "color": "rose",
+                "severity_level": "ERROR",
+                "severity_score": 0,
+                "scientific_assessment": str(e),
+                "engineering_recommendation": "Check image format and integrity."
+            },
+            "inference_latency_ms": 1.0
+        }
 
 @app.post("/api/predict")
 async def predict_image(file: UploadFile = File(...)):
@@ -621,9 +677,10 @@ def predict_base64(payload: Base64PredictRequest):
 
 @app.post("/api/batch-predict")
 async def batch_predict(files: List[UploadFile] = File(...)):
-    if len(files) > 30:
-        raise HTTPException(status_code=400, detail="Maximum 30 images per batch.")
+    if len(files) > 50:
+        raise HTTPException(status_code=400, detail="Maximum 50 images per batch.")
 
+    start_batch = time.perf_counter()
     results = []
     defective_count = 0
     healthy_count = 0
@@ -632,14 +689,13 @@ async def batch_predict(files: List[UploadFile] = File(...)):
 
     for idx, file in enumerate(files):
         image_bytes = await file.read()
-        res = process_single_image(
+        res = process_batch_image_fast(
             image_bytes=image_bytes,
-            filename=file.filename or f"test_sample_{idx+1}.jpg"
+            filename=file.filename or f"test_sample_{idx+1}.jpg",
+            idx=idx
         )
-        total_latency += res.get("inference_latency_ms", 20)
-
-        light_res = {k: v for k, v in res.items() if k not in ["original_image", "gradcam_image", "gradcam_jet_image"]}
-        results.append(light_res)
+        total_latency += res.get("inference_latency_ms", 10)
+        results.append(res)
 
         if res["is_uncertain"]:
             uncertain_count += 1
@@ -648,12 +704,15 @@ async def batch_predict(files: List[UploadFile] = File(...)):
         else:
             healthy_count += 1
 
+    total_batch_ms = round((time.perf_counter() - start_batch) * 1000, 1)
+
     return {
-        "batch_id": f"BATCH-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        "batch_id": f"BATCH-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
         "total_samples": len(files),
         "defective_count": defective_count,
         "healthy_count": healthy_count,
         "uncertain_count": uncertain_count,
+        "total_batch_latency_ms": total_batch_ms,
         "average_latency_ms": round(total_latency / max(1, len(files)), 1),
         "dataset_defect_rate": round((defective_count / max(1, len(files))) * 100, 1),
         "results": results

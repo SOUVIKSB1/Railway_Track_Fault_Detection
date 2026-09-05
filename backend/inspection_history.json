@@ -1,5 +1,14 @@
 [
   {
+    "inspection_token": "RV-TRK-20260905-6359",
+    "timestamp": "2026-09-05T16:39:36.359203+00:00",
+    "filename": "Defect_Track_Fracture.jpg",
+    "status": "DEFECTIVE",
+    "severity_level": "LOW_SEVERITY",
+    "confidence": 77.58,
+    "latency_ms": 100
+  },
+  {
     "inspection_token": "RV-TRK-20260905-8562",
     "timestamp": "2026-09-05 21:31:18",
     "filename": "Defect_Broken_Rail_Severed.jpg",

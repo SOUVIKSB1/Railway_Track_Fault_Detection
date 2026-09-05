@@ -4,99 +4,56 @@
 
 @layer base {
   body {
-    background: radial-gradient(circle at 50% 0%, #0c1e45 0%, #060d1f 70%, #030712 100%);
+    background-color: #090c15;
+    background-image: radial-gradient(circle at 50% 0%, #111726 0%, #090c15 80%);
     min-height: 100vh;
-    color: #f1f5f9;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #081226;
+  background: #090c15;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e3a8a;
+  background: #232b3e;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2563eb;
+  background: #334155;
 }
 
-/* Indian Railway Glassmorphism & Glow Utilities */
-.railway-glass {
-  background: rgba(11, 27, 61, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
+/* Modern Matte & Glass Surfaces */
 .railway-glass-card {
-  background: rgba(15, 31, 66, 0.85);
+  background: rgba(15, 21, 34, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(96, 165, 250, 0.25);
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 }
 
-.railway-glass-glow {
-  background: rgba(11, 27, 61, 0.85);
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  box-shadow: 0 0 25px rgba(249, 115, 22, 0.15);
+.railway-surface {
+  background: #0e1422;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.railway-glow-blue {
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+.railway-surface-hover:hover {
+  background: #141c2e;
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.railway-glow-orange {
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
-}
-
-.railway-glow-red {
-  box-shadow: 0 0 25px rgba(220, 38, 38, 0.5);
-}
-
-.railway-glow-green {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-}
-
-/* Railway Track Pattern Background */
+/* Subtle Grid Texture */
 .track-bg-pattern {
   background-image: 
-    linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-/* High Contrast Field Inspection Mode */
-.high-contrast-mode {
-  --tw-bg-opacity: 1 !important;
-  background-color: #000000 !important;
-}
-
-.high-contrast-mode .railway-glass,
-.high-contrast-mode .railway-glass-card {
-  background: #0a0a0a !important;
-  border: 2px solid #ffffff !important;
-  color: #ffffff !important;
-}
-
-/* Scanline Radar Effect */
-.scan-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, #f97316, #ef4444, #f97316, transparent);
-  box-shadow: 0 0 15px #f97316;
-  animation: scanline 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
 }

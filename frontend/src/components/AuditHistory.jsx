@@ -1,18 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { 
   Search, 
   Download, 
   Trash2, 
   RefreshCw, 
-  CheckCircle2, 
-  AlertTriangle, 
-  FileText,
+  History,
   Clock,
-  History
+  ShieldAlert,
+  CheckCircle2
 } from 'lucide-react';
-import { soundFx } from '../utils/soundEffects';
 import { generateInspectionPDF } from '../utils/pdfGenerator';
+
+function formatAuditTimestamp(isoString) {
+  if (!isoString) return 'Just now';
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return isoString;
+    return d.toLocaleString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  } catch {
+    return isoString;
+  }
+}
 
 export default function AuditHistory() {
   const [history, setHistory] = useState([]);
@@ -40,8 +56,7 @@ export default function AuditHistory() {
   }, []);
 
   const handleClearHistory = async () => {
-    if (!window.confirm('Clear all stored diagnostic experiment logs?')) return;
-    soundFx.playClick();
+    if (!window.confirm('Clear all stored diagnostic audit logs?')) return;
     try {
       await fetch('/api/history', { method: 'DELETE' });
       setHistory([]);
@@ -62,20 +77,20 @@ export default function AuditHistory() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
       <div className="railway-glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <span className="text-[10px] font-mono font-bold bg-blue-950 text-blue-300 px-2 py-0.5 rounded border border-blue-800 uppercase">
-              Experimental Records & Audit Trail
+            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+              Audit Logs & Records
             </span>
-            <h2 className="font-display font-bold text-xl text-white mt-1 flex items-center gap-2">
-              <History className="w-5 h-5 text-blue-400" />
-              Diagnostic Experiment Logs
+            <h2 className="text-base font-bold text-white mt-1.5 flex items-center gap-2">
+              <History className="w-5 h-5 text-emerald-400" />
+              Diagnostic Audit Trail
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              Historical record of all evaluated track image samples with confidence metrics, classification outputs, and technical report exports.
+              Historical record of evaluated railway track samples with accurate local inspection timestamps and technical report downloads.
             </p>
           </div>
 
@@ -83,9 +98,9 @@ export default function AuditHistory() {
             <button
               onClick={fetchHistory}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold transition"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold transition"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-blue-400 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-400 ${isLoading ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
             </button>
 
@@ -109,8 +124,8 @@ export default function AuditHistory() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by Sample Token ID or Filename..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-900 text-white text-xs rounded-xl border border-slate-700 focus:outline-none focus:border-blue-500 placeholder:text-slate-500"
+              placeholder="Search by Sample ID or Filename..."
+              className="w-full pl-9 pr-4 py-2 bg-slate-900 text-white text-xs rounded-xl border border-slate-700 focus:outline-none focus:border-slate-500 placeholder:text-slate-500"
             />
           </div>
 
@@ -118,10 +133,10 @@ export default function AuditHistory() {
             {['ALL', 'HEALTHY', 'DEFECTIVE'].map((st) => (
               <button
                 key={st}
-                onClick={() => { soundFx.playClick(); setFilterStatus(st); }}
+                onClick={() => setFilterStatus(st)}
                 className={`px-3 py-1.5 rounded-lg font-medium transition ${
                   filterStatus === st
-                    ? 'bg-blue-600 text-white font-semibold shadow'
+                    ? 'bg-slate-800 text-white font-semibold shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -137,16 +152,16 @@ export default function AuditHistory() {
         {filteredHistory.length === 0 ? (
           <div className="p-12 text-center text-slate-500 text-xs space-y-2">
             <Clock className="w-8 h-8 mx-auto opacity-40 text-slate-400" />
-            <p className="text-slate-300 font-semibold">No diagnostic records logged yet</p>
-            <p className="text-slate-500">Run an image inspection to automatically save experiment logs.</p>
+            <p className="text-slate-300 font-semibold">No diagnostic logs recorded yet</p>
+            <p className="text-slate-500">Run an image inspection to automatically log experiment results.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-[#0b1222] text-slate-400 font-mono text-[11px] uppercase border-b border-slate-800">
+              <thead className="bg-slate-950/80 text-slate-400 font-mono text-[11px] uppercase border-b border-slate-800">
                 <tr>
                   <th className="p-3.5">Sample ID</th>
-                  <th className="p-3.5">Timestamp</th>
+                  <th className="p-3.5">Inspection Time</th>
                   <th className="p-3.5">Filename</th>
                   <th className="p-3.5">Classification</th>
                   <th className="p-3.5">Severity</th>
@@ -159,25 +174,25 @@ export default function AuditHistory() {
                   const isDef = item.status === 'DEFECTIVE';
                   return (
                     <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="p-3.5 font-mono font-bold text-blue-400">
+                      <td className="p-3.5 font-mono font-bold text-slate-200">
                         {item.inspection_token}
                       </td>
-                      <td className="p-3.5 text-slate-400 font-mono text-[11px]">
-                        {item.timestamp}
+                      <td className="p-3.5 text-slate-300 font-mono text-[11px] whitespace-nowrap">
+                        {formatAuditTimestamp(item.timestamp)}
                       </td>
                       <td className="p-3.5 text-white font-mono truncate max-w-xs">
                         {item.filename}
                       </td>
                       <td className="p-3.5">
-                        <span className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                        <span className={`inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded text-[10px] font-mono ${
                           isDef
-                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                         }`}>
                           {item.status}
                         </span>
                       </td>
-                      <td className="p-3.5 font-mono font-semibold">
+                      <td className="p-3.5 font-mono">
                         <span className={isDef ? 'text-rose-400' : 'text-emerald-400'}>
                           {item.severity_level}
                         </span>
@@ -187,14 +202,11 @@ export default function AuditHistory() {
                       </td>
                       <td className="p-3.5 text-right">
                         <button
-                          onClick={() => {
-                            soundFx.playClick();
-                            generateInspectionPDF(item);
-                          }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-blue-300 hover:text-white text-xs transition"
+                          onClick={() => generateInspectionPDF(item)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs transition"
                           title="Download Technical Report (PDF)"
                         >
-                          <Download className="w-3.5 h-3.5" />
+                          <Download className="w-3.5 h-3.5 text-slate-400" />
                           <span>PDF</span>
                         </button>
                       </td>
