@@ -729,14 +729,21 @@ def fetch_history():
     return {"history": get_history()}
 
 @app.delete("/api/history")
+@app.post("/api/history/clear")
 def clear_history():
-    if HISTORY_FILE.exists():
-        try:
-            with open(HISTORY_FILE, "w") as f:
-                json.dump([], f)
-        except Exception:
-            pass
-    return {"message": "History cleared."}
+    try:
+        with open(HISTORY_FILE, "w") as f:
+            json.dump([], f)
+            f.flush()
+            os.fsync(f.fileno())
+    except Exception as e:
+        print(f"[RailVision] Error clearing history: {e}")
+        if HISTORY_FILE.exists():
+            try:
+                HISTORY_FILE.unlink()
+            except Exception:
+                pass
+    return {"message": "History cleared successfully.", "history": []}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # STATIC FRONTEND SERVING

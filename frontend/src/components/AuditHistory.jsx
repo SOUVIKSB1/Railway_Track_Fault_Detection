@@ -39,13 +39,16 @@ export default function AuditHistory() {
   const fetchHistory = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/history');
+      const res = await fetch(`/api/history?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
       if (res.ok) {
         const data = await res.json();
         setHistory(data.history || []);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching audit history:', err);
     } finally {
       setIsLoading(false);
     }
@@ -56,12 +59,29 @@ export default function AuditHistory() {
   }, []);
 
   const handleClearHistory = async () => {
-    if (!window.confirm('Clear all stored diagnostic audit logs?')) return;
+    if (!window.confirm('Are you sure you want to clear all stored diagnostic audit logs?')) return;
+    setIsLoading(true);
     try {
-      await fetch('/api/history', { method: 'DELETE' });
+      let res = await fetch('/api/history', { 
+        method: 'DELETE',
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (!res.ok) {
+        // Fallback endpoint if DELETE is blocked by any proxy
+        res = await fetch('/api/history/clear', { 
+          method: 'POST',
+          headers: { 'Cache-Control': 'no-cache' }
+        });
+      }
       setHistory([]);
+      setSearchTerm('');
+      setFilterStatus('ALL');
     } catch (err) {
-      console.error(err);
+      console.error('Error clearing history:', err);
+      // Fallback local clear
+      setHistory([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -107,7 +127,8 @@ export default function AuditHistory() {
             {history.length > 0 && (
               <button
                 onClick={handleClearHistory}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 text-rose-300 text-xs font-semibold transition"
+                disabled={isLoading}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 text-rose-300 text-xs font-semibold transition active:scale-95 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Clear Logs</span>
@@ -203,7 +224,7 @@ export default function AuditHistory() {
                       <td className="p-3.5 text-right">
                         <button
                           onClick={() => generateInspectionPDF(item)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs transition"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs transition cursor-pointer"
                           title="Download Technical Report (PDF)"
                         >
                           <Download className="w-3.5 h-3.5 text-slate-400" />

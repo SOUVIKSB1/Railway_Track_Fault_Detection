@@ -72,39 +72,42 @@ export function generateInspectionPDF(inspection) {
     const cardBg = [248, 250, 252];
     const borderGray = [226, 232, 240];
 
-    // 1. Header Banner
+    // 1. Header Banner (Clean, spacious layout with no text overlap)
     setFill(primaryDark);
     doc.rect(0, 0, 210, 28, 'F');
 
     setFill(emeraldAccent);
     doc.rect(0, 28, 210, 1.5, 'F');
 
-    // Brand Name & Subtitles
+    // Brand Name (Simplified clean title without clutter)
     setText(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('RAILVISION AI • TRACK DEFECT DIAGNOSTIC SYSTEM', 15, 12);
+    doc.setFontSize(15);
+    doc.text('RAILVISION AI', 15, 11.5);
 
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setFont('helvetica', 'normal');
     setText(203, 213, 225);
-    doc.text('Automated Railway Infrastructure Structural Health Monitoring & Safety Audit', 15, 18);
-    doc.text('Google LiteRT Neural Core • Explainable AI (Grad-CAM) Visual Diagnostics', 15, 23);
-
-    // Right Token Badge
-    setFill(20, 28, 48);
-    doc.roundedRect(138, 5, 57, 18, 2, 2, 'F');
-    setText(110, 231, 183);
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
-    doc.text('AUDIT TOKEN', 142, 10);
-    setText(255, 255, 255);
-    doc.setFontSize(8.5);
-    doc.text(String(inspection.inspection_token || 'RV-TRK-2026'), 142, 15);
-    doc.setFontSize(6.5);
+    doc.text('Automated Railway Infrastructure Health Monitoring & Safety Audit', 15, 17.5);
     setText(148, 163, 184);
+    doc.setFontSize(6.8);
+    doc.text('Google LiteRT Neural Core • Explainable AI (Grad-CAM) Visual Diagnostics', 15, 22.5);
+
+    // Right Token Badge (Properly positioned within right margin with clean inner padding)
+    setFill(20, 28, 48);
+    doc.roundedRect(138, 4.5, 57, 19, 2, 2, 'F');
+    setText(110, 231, 183);
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text('AUDIT TOKEN', 143, 9.5);
+    setText(255, 255, 255);
+    doc.setFontSize(7.8);
+    doc.text(String(inspection.inspection_token || 'RV-TRK-2026'), 143, 14.5);
+    doc.setFontSize(6.0);
+    setText(148, 163, 184);
+    doc.setFont('helvetica', 'normal');
     const formattedDate = inspection.timestamp ? new Date(inspection.timestamp).toLocaleString() : new Date().toLocaleString();
-    doc.text(String(formattedDate).slice(0, 24), 142, 20);
+    doc.text(String(formattedDate).slice(0, 25), 143, 19.5);
 
     // 2. Status Banner
     const isDefective = inspection.is_defective !== undefined 
@@ -132,11 +135,11 @@ export function generateInspectionPDF(inspection) {
     }
 
     setFill(statusBg);
-    doc.roundedRect(15, 33, 180, 10, 2, 2, 'F');
+    doc.roundedRect(15, 33, 180, 9.5, 1.5, 1.5, 'F');
     setText(255, 255, 255);
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setFont('helvetica', 'bold');
-    doc.text(statusText, 105, 39.5, { align: 'center' });
+    doc.text(statusText, 105, 39.2, { align: 'center' });
 
     // 3. Inspection Parameters Table
     const tableData = [
@@ -144,7 +147,7 @@ export function generateInspectionPDF(inspection) {
       ['Input File', String(inspection.filename || 'track_sample.jpg'), 'Image Tensor Size', '224 x 224 x 3 (Standardized)'],
       ['Model Architecture', 'EfficientNetV2-B0 (LiteRT)', 'Validation Accuracy', '94.74% (Fine-Tuned Transfer Model)'],
       ['Diagnostic Class', isDefective ? 'DEFECTIVE' : (isUncertain ? 'UNCERTAIN' : 'HEALTHY / NOMINAL'), 'Prediction Confidence', `${inspection.confidence || 0}%`],
-      ['Calibrated Threshold', `${(num(inspection.confidence_threshold, 0.50)) * 100}%`, 'Inference Latency', `${num(inspection.inference_latency_ms, 45)} ms`],
+      ['Calibrated Threshold', `${(num(inspection.confidence_threshold, 0.50)) * 100}%`, 'Inference Latency', `${num(inspection.inference_latency_ms || inspection.latency_ms, 45)} ms`],
     ];
 
     const tableOptions = {
@@ -159,10 +162,10 @@ export function generateInspectionPDF(inspection) {
         lineWidth: 0.2
       },
       columnStyles: {
-        0: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [51, 65, 85], cellWidth: 38 },
-        1: { cellWidth: 52 },
-        2: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [51, 65, 85], cellWidth: 38 },
-        3: { cellWidth: 52 },
+        0: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [51, 65, 85], cellWidth: 36 },
+        1: { cellWidth: 54 },
+        2: { fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [51, 65, 85], cellWidth: 36 },
+        3: { cellWidth: 54 },
       },
       margin: { left: 15, right: 15 }
     };
@@ -187,7 +190,7 @@ export function generateInspectionPDF(inspection) {
 
       const imgY = currentY + 5;
       const imgWidth = 86;
-      const imgHeight = 50;
+      const imgHeight = 52;
 
       // Left: Original Image
       try {
