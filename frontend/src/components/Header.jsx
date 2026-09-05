@@ -4,7 +4,6 @@ import {
   Layers, 
   History, 
   BarChart3, 
-  ShieldCheck,
   Activity
 } from 'lucide-react';
 
@@ -21,32 +20,32 @@ export default function Header({
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-[#0b0f19]/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6">
-        <div className="h-14 sm:h-16 flex items-center justify-between gap-3">
-          {/* Brand */}
-          <div className="flex items-center gap-2.5">
-            <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-800 border border-slate-700/60 text-slate-200 shadow-sm">
-              <ScanSearch className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+    <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-[#090c15]/95 backdrop-blur-md shadow-lg shadow-black/20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="py-3 sm:py-3.5 flex items-center justify-between gap-4">
+          {/* Brand Identity */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-800/90 border border-slate-700/80 text-slate-200 shadow-sm flex-shrink-0">
+              <ScanSearch className="w-5 h-5 text-emerald-400" />
             </div>
 
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-semibold text-sm sm:text-base text-white tracking-tight">
-                  RailVision <span className="text-emerald-400 font-bold">AI</span>
-                </h1>
-                <span className="text-[9px] sm:text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-slate-800/80 text-slate-300 border border-slate-700/60">
+            <div className="flex flex-col justify-center">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-base sm:text-lg text-white tracking-tight leading-snug">
+                  RailVision <span className="text-emerald-400 font-extrabold">AI</span>
+                </span>
+                <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-800/90 text-slate-300 border border-slate-700">
                   LiteRT
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-slate-400 hidden sm:block">
-                Railway Track Defect Diagnostic Engine
+              <p className="text-[11px] text-slate-400 mt-0.5 hidden sm:block leading-tight">
+                Railway Track Defect Diagnostic System
               </p>
             </div>
           </div>
 
           {/* Desktop Navigation Tabs */}
-          <nav className="hidden md:flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+          <nav className="hidden md:flex items-center space-x-1.5 bg-slate-900/90 p-1.5 rounded-xl border border-slate-800">
             {navTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -54,31 +53,31 @@ export default function Header({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap ${
+                  className={`relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap min-h-[38px] ${
                     isActive
-                      ? 'text-white bg-slate-800 shadow-sm border border-slate-700/60 font-semibold'
+                      ? 'text-white bg-slate-800 shadow-sm border border-slate-700/80 font-semibold'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
           </nav>
 
-          {/* Status Badge */}
+          {/* Right Status Badge */}
           <div className="flex items-center gap-2 text-xs font-mono">
-            <div className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-emerald-400 text-[10px] sm:text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="hidden sm:inline">ONLINE • LiteRT Engine</span>
-              <span className="sm:hidden">ONLINE</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-emerald-400 text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="hidden sm:inline font-medium">ONLINE • LiteRT Engine</span>
+              <span className="sm:hidden font-medium">ONLINE</span>
             </div>
           </div>
         </div>
 
-        {/* Mobile Navigation Bar (Horizontal Scrolling Tabs) */}
-        <div className="md:hidden pb-2.5 pt-0.5 overflow-x-auto scrollbar-none flex items-center gap-1.5">
+        {/* Mobile Navigation Scrollbar */}
+        <div className="md:hidden pb-3 pt-1 overflow-x-auto scrollbar-none flex items-center gap-2">
           {navTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -86,10 +85,10 @@ export default function Header({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 min-h-[36px] ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 min-h-[40px] ${
                   isActive
-                    ? 'text-white bg-slate-800 shadow-sm border border-slate-700/60 font-semibold'
-                    : 'text-slate-400 bg-slate-900/60 border border-slate-800/60 hover:text-slate-200'
+                    ? 'text-white bg-slate-800 shadow-sm border border-slate-700 font-semibold'
+                    : 'text-slate-400 bg-slate-900/80 border border-slate-800 hover:text-slate-200'
                 }`}
               >
                 <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} />

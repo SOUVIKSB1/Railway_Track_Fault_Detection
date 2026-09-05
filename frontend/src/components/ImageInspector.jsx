@@ -10,7 +10,9 @@ import {
   ShieldAlert, 
   XCircle,
   Ban,
-  ArrowRight
+  Clock,
+  Activity,
+  Cpu
 } from 'lucide-react';
 import { generateInspectionPDF } from '../utils/pdfGenerator';
 
@@ -18,6 +20,7 @@ export default function ImageInspector({ onInspectionComplete }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0.0);
   const [result, setResult] = useState(null);
   const [viewMode, setViewMode] = useState('split'); // 'split', 'overlay', 'original'
   const [selectedColormap, setSelectedColormap] = useState('turbo'); // 'turbo', 'jet'
@@ -28,6 +31,7 @@ export default function ImageInspector({ onInspectionComplete }) {
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     fetch('/api/samples')
@@ -37,6 +41,22 @@ export default function ImageInspector({ onInspectionComplete }) {
       })
       .catch(err => console.log('Samples load error:', err));
   }, []);
+
+  // Live timer effect during processing
+  useEffect(() => {
+    if (isLoading) {
+      setElapsedSeconds(0.0);
+      const startTime = performance.now();
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(((performance.now() - startTime) / 1000).toFixed(1));
+      }, 100);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isLoading]);
 
   const handleDragOver = (e) => e.preventDefault();
 
@@ -178,12 +198,20 @@ export default function ImageInspector({ onInspectionComplete }) {
     stopCamera();
   };
 
+  const getProcessingPhaseText = (sec) => {
+    const s = parseFloat(sec);
+    if (s < 0.3) return 'Standardizing input image tensor...';
+    if (s < 0.7) return 'Extracting 128-D convolutional feature vectors...';
+    if (s < 1.1) return 'Computing Grad-CAM explainability localization...';
+    return 'Finalizing safety diagnosis & report...';
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Top Section: Upload & 3 Curated Benchmark Samples */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Upload / Camera Dropzone */}
-        <div className="lg:col-span-7 railway-glass-card rounded-2xl p-4 sm:p-6 border border-slate-800 flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-7 railway-glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 flex flex-col justify-between space-y-5">
           <div>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
@@ -194,7 +222,7 @@ export default function ImageInspector({ onInspectionComplete }) {
                 {!isCameraActive ? (
                   <button
                     onClick={startCamera}
-                    className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition min-h-[36px]"
+                    className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition min-h-[36px]"
                   >
                     <Camera className="w-3.5 h-3.5 text-slate-400" />
                     <span>Camera</span>
@@ -202,7 +230,7 @@ export default function ImageInspector({ onInspectionComplete }) {
                 ) : (
                   <button
                     onClick={stopCamera}
-                    className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-rose-950/60 border border-rose-800/40 text-rose-300 transition min-h-[36px]"
+                    className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-rose-950/60 border border-rose-800/40 text-rose-300 transition min-h-[36px]"
                   >
                     <XCircle className="w-3.5 h-3.5" />
                     <span>Cancel</span>
@@ -232,8 +260,8 @@ export default function ImageInspector({ onInspectionComplete }) {
             <div
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`relative border-2 border-dashed rounded-xl p-4 sm:p-6 text-center cursor-pointer transition-colors duration-150 flex flex-col items-center justify-center min-h-[190px] sm:min-h-[220px] ${
+              onClick={() => !isLoading && fileInputRef.current?.click()}
+              className={`relative border-2 border-dashed rounded-xl p-4 sm:p-6 text-center cursor-pointer transition-colors duration-150 flex flex-col items-center justify-center min-h-[220px] sm:min-h-[250px] overflow-hidden ${
                 previewUrl ? 'border-slate-700 bg-slate-900/40' : 'border-slate-700/80 hover:border-slate-600 bg-slate-900/20'
               }`}
             >
@@ -245,26 +273,57 @@ export default function ImageInspector({ onInspectionComplete }) {
                 className="hidden"
               />
 
+              {/* Processing Overlay with Laser Scanner and Live Timer */}
+              {isLoading && (
+                <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm z-30 flex flex-col items-center justify-center p-4 space-y-3">
+                  <div className="laser-scan-line"></div>
+                  
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center shadow-lg shadow-emerald-900/30">
+                    <RefreshCw className="w-6 h-6 text-emerald-400 animate-spin" />
+                  </div>
+
+                  <div className="text-center space-y-1">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-xs font-bold text-white tracking-wide uppercase">
+                        Analyzing Track Diagnostics
+                      </span>
+                      <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/60">
+                        {elapsedSeconds}s
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-mono">
+                      {getProcessingPhaseText(elapsedSeconds)}
+                    </p>
+                  </div>
+
+                  <div className="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-400 rounded-full skeleton-shimmer w-full"></div>
+                  </div>
+                </div>
+              )}
+
               {previewUrl ? (
-                <div className="relative w-full max-h-52 sm:max-h-56 flex items-center justify-center">
+                <div className="relative w-full max-h-56 sm:max-h-64 flex items-center justify-center">
                   <img
                     src={previewUrl}
                     alt="Preview"
-                    className="max-h-52 sm:max-h-56 rounded-lg object-contain border border-slate-800 shadow"
+                    className="max-h-56 sm:max-h-64 rounded-lg object-contain border border-slate-800 shadow"
                   />
-                  <span className="absolute bottom-2 right-2 text-[10px] font-mono bg-slate-950/80 px-2 py-0.5 rounded text-slate-300 border border-slate-800">
-                    Click to change
-                  </span>
+                  {!isLoading && (
+                    <span className="absolute bottom-2 right-2 text-[10px] font-mono bg-slate-950/80 px-2 py-0.5 rounded text-slate-300 border border-slate-800">
+                      Click to change
+                    </span>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-800/80 flex items-center justify-center mx-auto text-slate-300 border border-slate-700/50">
-                    <UploadCloud className="w-5 h-5 sm:w-6 sm:h-6 text-slate-400" />
+                  <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center mx-auto text-slate-300 border border-slate-700/50">
+                    <UploadCloud className="w-6 h-6 text-slate-400" />
                   </div>
                   <div className="text-xs">
                     <span className="text-emerald-400 font-medium">Click to upload</span> or drag and drop
                   </div>
-                  <p className="text-[10px] sm:text-[11px] text-slate-500">Supports JPG, PNG, WebP</p>
+                  <p className="text-[10px] sm:text-[11px] text-slate-500">Supports JPG, PNG, WebP up to 25MB</p>
                 </div>
               )}
             </div>
@@ -277,20 +336,20 @@ export default function ImageInspector({ onInspectionComplete }) {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
             <span className="text-[11px] text-slate-400 font-mono truncate">
-              {selectedFile ? selectedFile.name : (previewUrl ? 'Image Selected' : 'No image chosen')}
+              {selectedFile ? selectedFile.name : (previewUrl ? 'Image Loaded' : 'No image chosen')}
             </span>
 
             <button
               onClick={handleAnalyze}
               disabled={isLoading || (!selectedFile && !previewUrl)}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-semibold transition shadow-sm flex items-center justify-center gap-2 min-h-[40px]"
+              className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-600 text-white text-xs font-semibold transition shadow-sm flex items-center justify-center gap-2 min-h-[42px]"
             >
               {isLoading ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Analyzing...</span>
+                  <span>Analyzing ({elapsedSeconds}s)...</span>
                 </>
               ) : (
                 <>
@@ -303,7 +362,7 @@ export default function ImageInspector({ onInspectionComplete }) {
         </div>
 
         {/* Right: Exactly 3 Curated Benchmark Samples */}
-        <div className="lg:col-span-5 railway-glass-card rounded-2xl p-4 sm:p-6 border border-slate-800 flex flex-col justify-between space-y-3">
+        <div className="lg:col-span-5 railway-glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 flex flex-col justify-between space-y-3">
           <div>
             <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
               Benchmark Samples
@@ -316,7 +375,7 @@ export default function ImageInspector({ onInspectionComplete }) {
             </p>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {samples.map((sample, idx) => {
               const isDef = sample.category === 'Defective';
               const isMod = sample.category === 'Moderate';
@@ -326,12 +385,12 @@ export default function ImageInspector({ onInspectionComplete }) {
                   key={sample.id || idx}
                   onClick={() => handleSelectSample(sample)}
                   disabled={isLoading}
-                  className="w-full text-left p-2.5 sm:p-3 rounded-xl bg-slate-900/70 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition flex items-center gap-3 group min-h-[56px]"
+                  className="w-full text-left p-3 rounded-xl bg-slate-900/70 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition flex items-center gap-3.5 group min-h-[58px]"
                 >
                   <img
                     src={sample.url}
                     alt={sample.title}
-                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border border-slate-700/60 flex-shrink-0"
+                    className="w-13 h-13 sm:w-14 sm:h-14 rounded-lg object-cover border border-slate-700/60 flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
@@ -354,19 +413,19 @@ export default function ImageInspector({ onInspectionComplete }) {
             })}
           </div>
 
-          <div className="p-2.5 rounded-lg bg-slate-900/40 border border-slate-800/60 text-[10px] sm:text-[11px] text-slate-400">
-            <span className="font-semibold text-slate-300">Note:</span> Instant inference uses LiteRT engine (<span className="text-emerald-400 font-mono">&lt; 100ms</span>). Non-railway images are automatically rejected.
+          <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/60 text-[10px] sm:text-[11px] text-slate-400">
+            <span className="font-semibold text-slate-300">LiteRT Engine:</span> High-speed inference (<span className="text-emerald-400 font-mono">&lt; 100ms</span>). Real-world tracks, joints, wheels, and fasteners supported.
           </div>
         </div>
       </div>
 
       {/* Results View */}
       {result && (
-        <div className="railway-glass-card rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-6">
+        <div className="railway-glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 space-y-6">
           {/* Header Status Bar */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-xl border ${
+              <div className={`p-2.5 rounded-xl border ${
                 result.is_rejected 
                   ? 'bg-rose-950/40 border-rose-800/50 text-rose-400'
                   : (result.is_defective 
@@ -404,7 +463,7 @@ export default function ImageInspector({ onInspectionComplete }) {
             {!result.is_rejected && (
               <button
                 onClick={() => generateInspectionPDF(result)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition border border-slate-700 w-full sm:w-auto justify-center min-h-[36px]"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition border border-slate-700 w-full sm:w-auto justify-center min-h-[38px]"
               >
                 <Download className="w-3.5 h-3.5 text-slate-400" />
                 <span>Export PDF Report</span>
@@ -414,7 +473,7 @@ export default function ImageInspector({ onInspectionComplete }) {
 
           {/* If Image is Rejected (Non-Railway Image) */}
           {result.is_rejected ? (
-            <div className="p-4 sm:p-6 rounded-xl bg-rose-950/20 border border-rose-800/40 space-y-4">
+            <div className="p-5 sm:p-6 rounded-xl bg-rose-950/20 border border-rose-800/40 space-y-4">
               <div className="flex items-start gap-3">
                 <Ban className="w-6 h-6 text-rose-400 flex-shrink-0 mt-0.5" />
                 <div>
@@ -427,11 +486,11 @@ export default function ImageInspector({ onInspectionComplete }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-rose-900/30">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-rose-900/30">
                 <div className="space-y-1">
                   <span className="text-[11px] font-mono text-slate-400 block">SEMANTIC TRACK SIMILARITY</span>
                   <div className="text-lg font-mono font-bold text-rose-400">
-                    {result.semantic_similarity}% <span className="text-xs text-slate-500 font-normal">(Required &ge; 72.0%)</span>
+                    {result.semantic_similarity}% <span className="text-xs text-slate-500 font-normal">(Required &ge; 32.0%)</span>
                   </div>
                 </div>
 
@@ -458,7 +517,7 @@ export default function ImageInspector({ onInspectionComplete }) {
                       <button
                         key={mode.id}
                         onClick={() => setViewMode(mode.id)}
-                        className={`px-2.5 py-1 rounded font-medium transition ${
+                        className={`px-3 py-1 rounded font-medium transition ${
                           viewMode === mode.id
                             ? 'bg-slate-800 text-white font-semibold'
                             : 'text-slate-400 hover:text-slate-200'
@@ -473,7 +532,7 @@ export default function ImageInspector({ onInspectionComplete }) {
                     <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
                       <button
                         onClick={() => setSelectedColormap('turbo')}
-                        className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
+                        className={`px-2.5 py-1 rounded text-[11px] font-mono transition ${
                           selectedColormap === 'turbo' ? 'bg-slate-800 text-white font-semibold' : 'text-slate-400'
                         }`}
                       >
@@ -481,7 +540,7 @@ export default function ImageInspector({ onInspectionComplete }) {
                       </button>
                       <button
                         onClick={() => setSelectedColormap('jet')}
-                        className={`px-2 py-0.5 rounded text-[11px] font-mono transition ${
+                        className={`px-2.5 py-1 rounded text-[11px] font-mono transition ${
                           selectedColormap === 'jet' ? 'bg-slate-800 text-white font-semibold' : 'text-slate-400'
                         }`}
                       >
@@ -494,7 +553,7 @@ export default function ImageInspector({ onInspectionComplete }) {
                 {/* Display Canvas */}
                 <div className="rounded-xl overflow-hidden bg-slate-950 border border-slate-800 p-2 flex items-center justify-center min-h-[260px] sm:min-h-[300px]">
                   {viewMode === 'split' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
                       <div className="relative aspect-square bg-black rounded-lg overflow-hidden border border-slate-800">
                         <img
                           src={result.original_image}
@@ -549,9 +608,9 @@ export default function ImageInspector({ onInspectionComplete }) {
                   <p className="text-xs text-slate-300 leading-relaxed">
                     {result.safety_assessment?.scientific_assessment}
                   </p>
-                  <div className="pt-2 border-t border-slate-800/80">
+                  <div className="pt-2.5 border-t border-slate-800/80">
                     <span className="text-[11px] font-semibold text-slate-400 block mb-1">
-                      Recommendation:
+                      Engineering Recommendation:
                     </span>
                     <p className="text-xs text-slate-300">
                       {result.safety_assessment?.engineering_recommendation}
@@ -565,7 +624,7 @@ export default function ImageInspector({ onInspectionComplete }) {
                     Model Confidence
                   </h4>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     <div>
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-rose-400 font-medium">Defective Track Probability</span>

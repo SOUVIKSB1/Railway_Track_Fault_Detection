@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   FolderUp, 
   CheckCircle2, 
@@ -7,15 +7,34 @@ import {
   Layers, 
   FileSpreadsheet,
   Download,
-  Zap
+  Zap,
+  Clock
 } from 'lucide-react';
 
 export default function BatchInspector() {
   const [files, setFiles] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0.0);
   const [batchResult, setBatchResult] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const fileInputRef = useRef(null);
+  const timerRef = useRef(null);
+
+  // Live timer effect during batch processing
+  useEffect(() => {
+    if (isProcessing) {
+      setElapsedSeconds(0.0);
+      const startTime = performance.now();
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(((performance.now() - startTime) / 1000).toFixed(1));
+      }, 100);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isProcessing]);
 
   const handleFilesSelected = (selectedFiles) => {
     const valid = Array.from(selectedFiles).filter(f => f.type.startsWith('image/')).slice(0, 50);
@@ -76,24 +95,24 @@ export default function BatchInspector() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
       {/* Batch Header */}
-      <div className="railway-glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
+      <div className="railway-glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 space-y-5">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-              High-Speed Bulk Test Bench
+              Bulk Test Bench
             </span>
-            <h2 className="text-base font-bold text-white mt-1.5 flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-white mt-1.5 flex items-center gap-2">
               <Layers className="w-5 h-5 text-emerald-400" />
               Batch Dataset Test Bench
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              Upload multiple track images simultaneously (up to 50 images) for high-speed automated evaluation.
+              Upload multiple track images simultaneously (up to 50 images) for automated evaluation with live skeleton progress.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <input
               type="file"
               ref={fileInputRef}
@@ -105,7 +124,7 @@ export default function BatchInspector() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isProcessing}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold transition"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold transition min-h-[40px] flex-1 sm:flex-none justify-center"
             >
               <FolderUp className="w-4 h-4 text-emerald-400" />
               <span>Select Images ({files.length})</span>
@@ -115,17 +134,17 @@ export default function BatchInspector() {
               <button
                 onClick={handleRunBatch}
                 disabled={isProcessing}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 text-white text-xs font-semibold transition shadow-sm"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 text-white text-xs font-semibold transition shadow-sm min-h-[40px] flex-1 sm:flex-none justify-center"
               >
                 {isProcessing ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Processing Batch...</span>
+                    <span>Processing ({elapsedSeconds}s)...</span>
                   </>
                 ) : (
                   <>
                     <Zap className="w-3.5 h-3.5" />
-                    <span>Run Batch Evaluation</span>
+                    <span>Run Batch ({files.length})</span>
                   </>
                 )}
               </button>
@@ -141,8 +160,65 @@ export default function BatchInspector() {
         )}
       </div>
 
-      {/* Batch Results Overview */}
-      {batchResult && (
+      {/* SKELETON LOADING ANIMATION (When Batch Is Processing) */}
+      {isProcessing && (
+        <div className="space-y-6">
+          {/* Skeleton Progress Header Banner */}
+          <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <RefreshCw className="w-5 h-5 text-emerald-400 animate-spin" />
+              <div>
+                <span className="text-xs font-bold text-white block">
+                  Executing Automated Batch Diagnostics...
+                </span>
+                <p className="text-[11px] text-slate-400 font-mono">
+                  Evaluating {files.length} images on high-speed LiteRT engine
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 font-mono text-xs text-emerald-400 bg-emerald-950/60 px-3 py-1.5 rounded-lg border border-emerald-800/60">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Time Elapsed: {elapsedSeconds}s</span>
+            </div>
+          </div>
+
+          {/* 4 Skeleton Metric Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="railway-glass-card rounded-xl p-4 border border-slate-800 space-y-2">
+                <div className="h-3 w-20 rounded skeleton-shimmer"></div>
+                <div className="h-7 w-14 rounded skeleton-shimmer mt-1"></div>
+                <div className="h-2.5 w-24 rounded skeleton-shimmer"></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Skeleton Table */}
+          <div className="railway-glass-card rounded-2xl border border-slate-800 overflow-hidden">
+            <div className="p-4 bg-slate-900/60 border-b border-slate-800 flex items-center justify-between">
+              <div className="h-4 w-36 rounded skeleton-shimmer"></div>
+              <div className="h-7 w-28 rounded skeleton-shimmer"></div>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {[1, 2, 3, 4, 5, 6].map((row) => (
+                <div key={row} className="flex items-center justify-between gap-4 py-2 border-b border-slate-800/40">
+                  <div className="h-3 w-6 rounded skeleton-shimmer"></div>
+                  <div className="h-3 w-40 sm:w-60 rounded skeleton-shimmer flex-1"></div>
+                  <div className="h-5 w-20 rounded-full skeleton-shimmer"></div>
+                  <div className="h-3 w-14 rounded skeleton-shimmer hidden sm:block"></div>
+                  <div className="h-3 w-12 rounded skeleton-shimmer"></div>
+                  <div className="h-3 w-10 rounded skeleton-shimmer text-right"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Results Overview (When Done) */}
+      {!isProcessing && batchResult && (
         <div className="space-y-6">
           {/* 4 Metric Highlights */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
