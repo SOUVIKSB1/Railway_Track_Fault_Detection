@@ -95,26 +95,17 @@ def validate_track_image(pil_img: Image.Image, feature_vector: Optional[np.ndarr
         max_sim = float(np.max(sims))
         similarity = max_sim
         
-        # Multi-Tier Semantic Boundary:
-        # Tier A: If similarity < 0.48 -> Definite out-of-distribution non-railway image
-        if similarity < 0.48:
+        # Calibrated Railway Domain Boundary:
+        # Non-railway images (human selfies, indoor rooms, vehicles, animals, nature, synthetic): <= 0.56
+        # Authentic railway track infrastructure: >= 0.58 (up to 0.98)
+        MIN_RAILWAY_SIMILARITY = 0.58
+        if similarity < MIN_RAILWAY_SIMILARITY:
             match_pct = max(0.0, similarity * 100)
             return (
                 False,
-                f"Non-Railway Image Detected (Semantic Match: {match_pct:.1f}% vs required 48.0%). The image does not contain railway tracks, rail heads, fasteners, or ballast infrastructure.",
+                f"Non-Railway Image Detected (Track Match: {match_pct:.1f}% vs required 58.0%). The uploaded image does not match railway track infrastructure, rail heads, fasteners, or ballast geometry.",
                 "Non-Railway Object / Irrelevant Image",
                 similarity
             )
-            
-        # Tier B: If 0.48 <= similarity < 0.65 -> Must exhibit physical rail/ballast texture and edge density
-        if similarity < 0.65:
-            if mean_grad < 10.0 or strong_edges < 0.06:
-                match_pct = max(0.0, similarity * 100)
-                return (
-                    False,
-                    f"Non-Railway Object Detected (Semantic Match: {match_pct:.1f}%). The image lacks distinct railway steel rail edges and ballast texture.",
-                    "Non-Railway Object / Smooth Surface",
-                    similarity
-                )
 
     return True, None, "Railway Track Infrastructure", similarity
