@@ -242,12 +242,12 @@ def assess_track_safety(is_defective: bool, confidence: float, is_uncertain: boo
             "engineering_recommendation": "Track segment is structurally sound. Continue standard scheduled monitoring cycle."
         }
 
-    if confidence >= 0.90:
+    if confidence >= 0.75:
         severity = "HIGH_SEVERITY"
         color = "rose"
         assessment = "Prominent structural anomaly detected. Strong feature localization in rail head/weld zone indicating fracture or severe crack."
         recommendation = "Immediate physical inspection required. Perform Ultrasonic Flaw Detection (USFD) and verify rail integrity."
-    elif confidence >= 0.80:
+    elif confidence >= 0.65:
         severity = "MODERATE_SEVERITY"
         color = "orange"
         assessment = "Structural irregularity identified with moderate-to-high confidence. Potential surface fatigue, squat, or weld porosity."
@@ -445,7 +445,12 @@ def process_single_image(
     iso_timestamp = now_utc.isoformat()
 
     try:
-        pil_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        Image.MAX_IMAGE_PIXELS = 50_000_000
+        pil_img = Image.open(io.BytesIO(image_bytes))
+        # Prevent server memory crash on giant 4K/8K images by downscaling safely
+        if max(pil_img.size) > 1600:
+            pil_img.thumbnail((1600, 1600), Image.Resampling.LANCZOS)
+        pil_img = pil_img.convert("RGB")
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid image format: {str(e)}")
 
@@ -555,6 +560,7 @@ def process_single_image(
         "is_uncertain": is_uncertain,
         "is_rejected": False,
         "rejection_reason": None,
+        "semantic_similarity": round(sim_score * 100, 2),
         "confidence": round(max_conf * 100, 2),
         "confidence_raw": max_conf,
         "confidence_threshold": CONFIDENCE_THRESHOLD,

@@ -69,10 +69,21 @@ def validate_track_image(pil_img: Image.Image, feature_vector: Optional[np.ndarr
         r_ratio = r_mean / total_mean
         g_ratio = g_mean / total_mean
         b_ratio = b_mean / total_mean
-        if r_ratio > 0.90 or g_ratio > 0.90 or b_ratio > 0.90:
+        if max(r_ratio, g_ratio, b_ratio) > 0.88:
             return False, "Unnatural monochromatic or solid color profile detected. Please upload an authentic railway track photograph.", "Monochromatic / Synthetic", 0.0
 
-    # 4. Deep 128-D RAG Manifold Verification
+    # 4. Structural Edge Gradient & Linear Texture Analysis
+    gray = img_rgb.convert("L").resize((224, 224))
+    g_arr = np.array(gray, dtype=np.float32)
+    gx = np.zeros_like(g_arr)
+    gy = np.zeros_like(g_arr)
+    gx[:, 1:-1] = g_arr[:, 2:] - g_arr[:, :-2]
+    gy[1:-1, :] = g_arr[2:, :] - g_arr[:-2, :]
+    grad_mag = np.sqrt(gx**2 + gy**2)
+    mean_grad = float(np.mean(grad_mag))
+    strong_edges = float(np.mean(grad_mag > 28.0))
+
+    # 5. Deep 128-D RAG Manifold Verification
     if feature_vector is None:
         feature_vector = extract_embedding(pil_img)
 
@@ -84,18 +95,26 @@ def validate_track_image(pil_img: Image.Image, feature_vector: Optional[np.ndarr
         max_sim = float(np.max(sims))
         similarity = max_sim
         
-        # Calibrated threshold:
-        # Authentic railway photos (tracks, wheels, joints, fasteners, sleepers): >= 0.32
-        # Completely out-of-distribution synthetic/noise/blank images: < 0.32
-        MIN_RAILWAY_SIMILARITY = 0.32
-        
-        if similarity < MIN_RAILWAY_SIMILARITY:
+        # Multi-Tier Semantic Boundary:
+        # Tier A: If similarity < 0.48 -> Definite out-of-distribution non-railway image
+        if similarity < 0.48:
             match_pct = max(0.0, similarity * 100)
             return (
                 False,
-                f"Non-Railway Image Detected (Track Semantic Match: {match_pct:.1f}% vs required 32.0%). The uploaded image does not match railway track infrastructure, rail heads, fasteners, or ballast geometry.",
+                f"Non-Railway Image Detected (Semantic Match: {match_pct:.1f}% vs required 48.0%). The image does not contain railway tracks, rail heads, fasteners, or ballast infrastructure.",
                 "Non-Railway Object / Irrelevant Image",
                 similarity
             )
+            
+        # Tier B: If 0.48 <= similarity < 0.65 -> Must exhibit physical rail/ballast texture and edge density
+        if similarity < 0.65:
+            if mean_grad < 10.0 or strong_edges < 0.06:
+                match_pct = max(0.0, similarity * 100)
+                return (
+                    False,
+                    f"Non-Railway Object Detected (Semantic Match: {match_pct:.1f}%). The image lacks distinct railway steel rail edges and ballast texture.",
+                    "Non-Railway Object / Smooth Surface",
+                    similarity
+                )
 
     return True, None, "Railway Track Infrastructure", similarity

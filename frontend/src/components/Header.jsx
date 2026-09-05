@@ -70,8 +70,7 @@ export default function Header({
           <div className="flex items-center gap-2 text-xs font-mono">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-emerald-400 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="hidden sm:inline font-medium">ONLINE • LiteRT Engine</span>
-              <span className="sm:hidden font-medium">ONLINE</span>
+              <span className="font-medium">Online</span>
             </div>
           </div>
         </div>

@@ -32,6 +32,58 @@ export default function ImageInspector({ onInspectionComplete }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const timerRef = useRef(null);
+  const resultRef = useRef(null);
+
+  // Client-side image compression to prevent large 4K/8K image upload crashes
+  const compressImageFile = async (file, maxDimension = 1400, quality = 0.88) => {
+    return new Promise((resolve) => {
+      if (!file || file.size < 800 * 1024) {
+        resolve(file);
+        return;
+      }
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressed = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(compressed);
+              } else {
+                resolve(file);
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  };
 
   useEffect(() => {
     fetch('/api/samples')
@@ -41,6 +93,15 @@ export default function ImageInspector({ onInspectionComplete }) {
       })
       .catch(err => console.log('Samples load error:', err));
   }, []);
+
+  // Smooth auto-scroll down to results on mobile/desktop when result is produced
+  useEffect(() => {
+    if (result && resultRef.current) {
+      setTimeout(() => {
+        resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
+  }, [result]);
 
   // Live timer effect during processing
   useEffect(() => {
@@ -87,8 +148,10 @@ export default function ImageInspector({ onInspectionComplete }) {
     try {
       let response;
       if (selectedFile) {
+        // Automatically optimize/compress large user uploads before sending
+        const optimizedFile = await compressImageFile(selectedFile);
         const formData = new FormData();
-        formData.append('file', selectedFile);
+        formData.append('file', optimizedFile);
         response = await fetch('/api/predict', {
           method: 'POST',
           body: formData,
@@ -105,9 +168,10 @@ export default function ImageInspector({ onInspectionComplete }) {
       } else if (previewUrl && previewUrl.startsWith('blob:')) {
         const blobRes = await fetch(previewUrl);
         const blob = await blobRes.blob();
-        const file = new File([blob], 'captured_image.jpg', { type: 'image/jpeg' });
+        const rawFile = new File([blob], 'captured_image.jpg', { type: 'image/jpeg' });
+        const optimizedFile = await compressImageFile(rawFile);
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', optimizedFile);
         response = await fetch('/api/predict', {
           method: 'POST',
           body: formData,
@@ -362,20 +426,23 @@ export default function ImageInspector({ onInspectionComplete }) {
         </div>
 
         {/* Right: Exactly 3 Curated Benchmark Samples */}
-        <div className="lg:col-span-5 railway-glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 flex flex-col justify-between space-y-3">
+        <div className="lg:col-span-5 railway-glass-card rounded-2xl p-4 sm:p-5 border border-slate-800 flex flex-col justify-between space-y-3 bg-[#0c101d]/90">
           <div>
-            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-              Benchmark Samples
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                Benchmark Samples
+              </span>
+              <span className="text-[10px] font-mono text-emerald-400">3 Curated Tests</span>
+            </div>
             <h3 className="text-sm font-semibold text-white mt-1.5">
               Quick Test Verification
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Select one of the 3 validated benchmark images for instant evaluation:
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+              Tap any validated benchmark image below for instant AI diagnostic evaluation:
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-2.5">
             {samples.map((sample, idx) => {
               const isDef = sample.category === 'Defective';
               const isMod = sample.category === 'Moderate';
@@ -385,43 +452,50 @@ export default function ImageInspector({ onInspectionComplete }) {
                   key={sample.id || idx}
                   onClick={() => handleSelectSample(sample)}
                   disabled={isLoading}
-                  className="w-full text-left p-3 rounded-xl bg-slate-900/70 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition flex items-center gap-3.5 group min-h-[58px]"
+                  className="w-full text-left p-2.5 sm:p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800/90 hover:border-slate-700 transition-all flex items-center gap-3 group active:scale-[0.99] touch-manipulation"
                 >
                   <img
                     src={sample.url}
                     alt={sample.title}
-                    className="w-13 h-13 sm:w-14 sm:h-14 rounded-lg object-cover border border-slate-700/60 flex-shrink-0"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover border border-slate-700/70 flex-shrink-0 shadow-sm"
                   />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                        isDef ? 'bg-rose-400' : (isMod ? 'bg-amber-400' : 'bg-emerald-400')
-                      }`} />
-                      <h4 className="text-xs font-semibold text-slate-200 truncate group-hover:text-white">
-                        {sample.title}
-                      </h4>
+                  <div className="flex-1 min-w-0 pr-1">
+                    <div className="flex items-center justify-between gap-1 mb-0.5">
+                      <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border ${
+                        isDef 
+                          ? 'bg-rose-950/60 text-rose-300 border-rose-800/60'
+                          : (isMod 
+                              ? 'bg-amber-950/60 text-amber-300 border-amber-800/60'
+                              : 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60')
+                      }`}>
+                        {isDef ? 'CRITICAL DEFECT' : (isMod ? 'NOMINAL TURNOUT' : 'HEALTHY TRACK')}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400 group-hover:text-emerald-400 transition hidden sm:inline">
+                        Test →
+                      </span>
                     </div>
+                    <h4 className="text-xs sm:text-sm font-semibold text-slate-200 truncate group-hover:text-white">
+                      {sample.title}
+                    </h4>
                     <p className="text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">
                       {sample.subtitle || (isDef ? 'Structural Fracture' : (isMod ? 'Rail Switch Joint' : 'Continuous Welded'))}
                     </p>
-                    <span className="text-[10px] font-mono text-emerald-400/90 mt-0.5 inline-block">
-                      Click to Test →
-                    </span>
                   </div>
                 </button>
               );
             })}
           </div>
 
-          <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/60 text-[10px] sm:text-[11px] text-slate-400">
-            <span className="font-semibold text-slate-300">LiteRT Engine:</span> High-speed inference (<span className="text-emerald-400 font-mono">&lt; 100ms</span>). Real-world tracks, joints, wheels, and fasteners supported.
+          <div className="p-2.5 sm:p-3 rounded-xl bg-slate-900/40 border border-slate-800/60 text-[10px] sm:text-[11px] text-slate-400 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0"></span>
+            <span><span className="font-semibold text-slate-300">LiteRT Engine:</span> Real-world tracks, joints, wheels, and fasteners supported.</span>
           </div>
         </div>
       </div>
 
       {/* Results View */}
       {result && (
-        <div className="railway-glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 space-y-6">
+        <div ref={resultRef} className="railway-glass-card rounded-2xl p-5 sm:p-6 border border-slate-800 space-y-6">
           {/* Header Status Bar */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
             <div className="flex items-center gap-3">
